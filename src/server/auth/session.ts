@@ -54,6 +54,12 @@ export async function requireAdministrator(): Promise<Viewer> {
   return viewer;
 }
 
+/** For Server Actions, which report errors instead of redirecting: the administrator, or null. */
+export async function getAdministrator(): Promise<Viewer | null> {
+  const session = await getSession();
+  return session.status === "authorized" && session.viewer.isAdministrator ? session.viewer : null;
+}
+
 export async function requireRequestOpener(): Promise<Viewer> {
   const viewer = await requireViewer();
   if (!canOpenRequests(viewer)) redirect("/access-denied");

@@ -32,7 +32,10 @@ export function buildNavigation(viewer: Viewer): NavSection[] {
   if (viewer.isAdministrator) {
     sections.push({
       title: "Administração",
-      items: [{ title: "Configurações", href: "/admin", icon: "admin" }],
+      items: [
+        { title: "Serviços", href: "/admin/services", icon: "services" },
+        { title: "Departamentos", href: "/admin/departments", icon: "departments" },
+      ],
     });
   }
 

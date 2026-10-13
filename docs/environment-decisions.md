@@ -1,7 +1,7 @@
 # Environment Decisions (Phase 0)
 
 Status: Phase 0 complete.
-Last updated: 2026-10-13.
+Last updated: 2026-10-13 (Phase 3).
 
 No secrets, keys or connection strings belong in this file.
 
@@ -110,7 +110,20 @@ All three exist in `public.users`.
 | Migration | Applied |
 |---|---|
 | `20261013160000_gestao_cadastros_roles_and_requester_departments` | 2026-10-13, verified |
+| `20261013180000_gestao_cadastros_service_catalog` | 2026-10-13, verified |
+
+Note: the Supabase SQL Editor may not keep one session across statements, so migrations must not rely on temporary tables (`on commit drop`); seed data goes in a single statement with CTEs.
+
+## Service catalog (Phase 3)
+
+- Tables `gestao_cadastros_services` (per requester department; `kind` = `standard` | `correction`) and `gestao_cadastros_service_fields`.
+- Initial catalog from `specs/05-service-catalog.md`: 32 services (Fiscal 20, DP 6, Contábil 6, including one "Correção de Cadastro / Refazer" each) and 183 fields. For V1 every field is free text filled in by the requester (e-mail fields use `email`); no option lists yet. Every service ends with the optional "Observações".
+- "Anexo" (Replicador de acumulador) is seeded **inactive** with type `file`; the admin UI does not offer or activate `file` fields until attachment rules are approved.
+- Historical integrity: `field_key`/`field_type` of a field and `dpto_id`/`kind` of a service are immutable (triggers); no DELETE grant — deactivate instead; saved select options are never removed (only deactivated). Requests (Phase 4) will snapshot label/type/option labels at submission.
+- `created_by`/`updated_by` are stamped by trigger from the session.
+- RLS: administrators read/write; operators read all; requesters read only active services/fields of departments they may open requests for. `gestao_cadastros_requester_departments` gained admin-only INSERT/UPDATE.
+- `public.gestao_cadastros_admin_departments()` lists corporate departments for GC administrators only.
 
 ## Open items
 
-- **Foreign keys into shared tables** — a FK from GC tables to `public.users` / `public.dpto` with the default `ON DELETE NO ACTION` would block other apps from deleting a user/department that has GC requests. Proposed: keep the FK for integrity but snapshot requester name/email/department on the request, and decide `ON DELETE` behavior (`SET NULL` vs `RESTRICT`) during the Phase 3/4 migration review.
+- **Foreign keys into shared tables** — catalog (Phase 3): services reference requester departments with `ON DELETE RESTRICT`, so a corporate `public.dpto` row that has GC services cannot be deleted (deactivate it in GC instead); `created_by`/`updated_by` use `ON DELETE SET NULL`. Requests (Phase 4): keep the FK for integrity but snapshot requester name/email/department on the request, and decide `ON DELETE` behavior during that migration review.

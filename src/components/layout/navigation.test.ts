@@ -31,7 +31,7 @@ describe("buildNavigation", () => {
 
   it("adds administration for administrators", () => {
     const admin = { ...baseViewer, isAdministrator: true, isStaff: true };
-    expect(hrefs(admin)).toContain("/admin");
+    expect(hrefs(admin)).toEqual(expect.arrayContaining(["/admin/services", "/admin/departments"]));
   });
 
   it("hides 'Nova Solicitação' when no department is available", () => {

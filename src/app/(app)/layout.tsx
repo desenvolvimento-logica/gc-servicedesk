@@ -5,6 +5,7 @@ import { ViewerProvider } from "@/components/auth/viewer-context";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { buildNavigation } from "@/components/layout/build-navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Toaster } from "@/components/ui/sonner";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { requireViewer } from "@/server/auth/session";
 
@@ -28,6 +29,7 @@ async function AuthenticatedShell({ children }: { children: React.ReactNode }) {
         <AppSidebar sections={buildNavigation(viewer)} />
         <SidebarInset className="bg-background">{children}</SidebarInset>
       </SidebarProvider>
+      <Toaster richColors position="top-right" />
     </ViewerProvider>
   );
 }
