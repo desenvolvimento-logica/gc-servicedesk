@@ -10,6 +10,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -17,14 +18,15 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
-import { isNavItemActive, navIcons, type NavItem } from "./navigation";
+import { isNavItemActive, navIcons, type NavSection } from "./navigation";
 
 type AppSidebarProps = {
-  items: readonly NavItem[];
+  sections: readonly NavSection[];
 };
 
-export function AppSidebar({ items }: AppSidebarProps) {
+export function AppSidebar({ sections }: AppSidebarProps) {
   const pathname = usePathname();
+  const allItems = sections.flatMap((section) => section.items);
 
   return (
     <Sidebar collapsible="icon">
@@ -42,32 +44,37 @@ export function AppSidebar({ items }: AppSidebarProps) {
       </SidebarHeader>
 
       <SidebarContent className="pt-4">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
-              {items.map((item) => {
-                const active = isNavItemActive(item.href, pathname, items);
-                const Icon = navIcons[item.icon];
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={active}
-                      size="lg"
-                      tooltip={item.title}
-                      className="relative h-11 font-medium group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:before:hidden data-[active=true]:font-semibold data-[active=true]:before:absolute data-[active=true]:before:inset-y-1.5 data-[active=true]:before:left-0 data-[active=true]:before:w-1 data-[active=true]:before:rounded-full data-[active=true]:before:bg-brand"
-                    >
-                      <Link href={item.href} aria-current={active ? "page" : undefined}>
-                        <Icon aria-hidden className={active ? "text-brand-ink" : "text-muted-foreground"} />
-                        <span className="group-data-[collapsible=icon]:sr-only">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {sections.map((section) => (
+          <SidebarGroup key={section.title ?? "main"}>
+            {section.title ? (
+              <SidebarGroupLabel className="text-xs tracking-wide uppercase">{section.title}</SidebarGroupLabel>
+            ) : null}
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1">
+                {section.items.map((item) => {
+                  const active = isNavItemActive(item.href, pathname, allItems);
+                  const Icon = navIcons[item.icon];
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        size="lg"
+                        tooltip={item.title}
+                        className="relative h-11 font-medium group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:before:hidden data-[active=true]:font-semibold data-[active=true]:before:absolute data-[active=true]:before:inset-y-1.5 data-[active=true]:before:left-0 data-[active=true]:before:w-1 data-[active=true]:before:rounded-full data-[active=true]:before:bg-brand"
+                      >
+                        <Link href={item.href} aria-current={active ? "page" : undefined}>
+                          <Icon aria-hidden className={active ? "text-brand-ink" : "text-muted-foreground"} />
+                          <span className="group-data-[collapsible=icon]:sr-only">{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="px-5 pb-6 group-data-[collapsible=icon]:hidden">

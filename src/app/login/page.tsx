@@ -1,10 +1,11 @@
-import { BarChart3, ChevronRight, CircleCheck, FileText, Lock, Settings } from "lucide-react";
+import { BarChart3, CircleCheck, FileText, Lock, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { MicrosoftLogo } from "@/components/brand/microsoft-logo";
-import { Button } from "@/components/ui/button";
+
+import { SignInForm, SignInFormFallback } from "./sign-in-form";
 
 export const metadata: Metadata = {
   title: "Acesso",
@@ -44,7 +45,7 @@ const highlights: readonly Highlight[] = [
   },
 ];
 
-export default function LoginPage() {
+export default function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto grid min-h-screen max-w-7xl items-center gap-10 px-4 py-10 md:px-8 lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-16">
@@ -112,15 +113,9 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-2">
-            {/* Enabled in Phase 2, once Microsoft Entra ID SSO is wired to Supabase Auth. */}
-            <Button size="lg" className="h-14 w-full justify-between px-5 text-base font-semibold" disabled>
-              <MicrosoftLogo className="size-6" />
-              Entrar com Microsoft
-              <ChevronRight aria-hidden />
-            </Button>
-            <p className="text-center text-xs text-muted-foreground">
-              O login será habilitado em breve.
-            </p>
+            <Suspense fallback={<SignInFormFallback />}>
+              <SignInForm searchParams={searchParams} />
+            </Suspense>
           </div>
 
           <div className="flex items-start gap-4 rounded-xl bg-status-info-soft p-5">

@@ -2,6 +2,7 @@ import { House } from "lucide-react";
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 
+import { UserMenu } from "@/components/auth/user-menu";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,7 +22,7 @@ export type BreadcrumbEntry = {
 type PageHeaderProps = {
   title: string;
   breadcrumbs?: readonly BreadcrumbEntry[];
-  /** Right-hand area (page actions; the user menu joins it in Phase 2). */
+  /** Page actions, shown before the user menu. */
   actions?: ReactNode;
 };
 
@@ -60,7 +61,10 @@ export function PageHeader({ title, breadcrumbs = [], actions }: PageHeaderProps
           </Breadcrumb>
         </div>
       </div>
-      {actions ? <div className="flex items-center gap-3">{actions}</div> : null}
+      <div className="flex items-center gap-3">
+        {actions}
+        <UserMenu />
+      </div>
     </header>
   );
 }

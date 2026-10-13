@@ -87,6 +87,30 @@ All three exist in `public.users`.
 5. **Hosting** — Vercel. Redirect URLs (production, previews, localhost) go into the Supabase Auth allow-list in Phase 2.
 6. **Service field types and option lists** — taken from `specs/` and resolved per phase as implementation advances.
 
+## Access model (Phase 2)
+
+| Profile | Defined by | Opens requests | Sees requests |
+|---|---|---|---|
+| Requester | `user_dpto` in an active `gestao_cadastros_requester_departments` row, no GC role | Own department only | Own only |
+| Operator | `operator` in `gestao_cadastros_user_roles` | Any active requester department | All |
+| Administrator | `administrator` in `gestao_cadastros_user_roles` | Any active requester department | All + configuration |
+| No access | Login not linked to `public.users`, or neither of the above | — | — |
+
+- Profile resolution: `public.gestao_cadastros_my_profile()` (`SECURITY DEFINER`, returns only the caller's own profile; needed because `public.dpto` RLS restricts names to corporate admins). Policy helpers live in `private.gestao_cadastros_*`.
+- Provisioning: pre-provisioned corporate users only (`public.users`); nobody gets access from the e-mail domain alone.
+- Azure tenant restriction is configured in the Supabase Azure provider.
+- Sign-out uses `scope: "local"`: a global sign-out would also end the user's sessions in the other office apps sharing the Supabase project.
+- Supabase Auth redirect allow-list: `http://localhost:3000/auth/callback`, `https://gc-servicedesk.vercel.app/auth/callback`. The shared **Site URL is never changed**. Vercel preview URLs are not allow-listed.
+
+## Migrations
+
+- Versioned in `supabase/migrations/`, with a matching rollback in `supabase/rollbacks/` and read-only checks in `supabase/verification/`.
+- Applied manually in the Supabase SQL Editor after review — not with `supabase db push`, which would try to reconcile the shared project's migration history.
+
+| Migration | Applied |
+|---|---|
+| `20261013160000_gestao_cadastros_roles_and_requester_departments` | 2026-10-13, verified |
+
 ## Open items
 
 - **Foreign keys into shared tables** — a FK from GC tables to `public.users` / `public.dpto` with the default `ON DELETE NO ACTION` would block other apps from deleting a user/department that has GC requests. Proposed: keep the FK for integrity but snapshot requester name/email/department on the request, and decide `ON DELETE` behavior (`SET NULL` vs `RESTRICT`) during the Phase 3/4 migration review.

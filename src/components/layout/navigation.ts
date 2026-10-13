@@ -1,4 +1,4 @@
-import { CircleHelp, FileText, House, SquarePlus } from "lucide-react";
+import { ChartColumn, CircleHelp, FileText, Headset, House, Settings, SquarePlus } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export const navIcons = {
@@ -6,6 +6,9 @@ export const navIcons = {
   "new-request": SquarePlus,
   requests: FileText,
   help: CircleHelp,
+  queue: Headset,
+  reports: ChartColumn,
+  admin: Settings,
 } satisfies Record<string, LucideIcon>;
 
 export type NavIconName = keyof typeof navIcons;
@@ -17,19 +20,11 @@ export type NavItem = {
   icon: NavIconName;
 };
 
-/**
- * Application routes shown in the sidebar. These are app screens, not
- * services: the service catalog is always loaded from the database.
- *
- * Operator and administrator entries are added in Phase 2, once roles are
- * resolved server-side from the authenticated profile.
- */
-export const requesterNavigation: readonly NavItem[] = [
-  { title: "Início", href: "/", icon: "home" },
-  { title: "Nova Solicitação", href: "/requests/new", icon: "new-request" },
-  { title: "Minhas Solicitações", href: "/requests", icon: "requests" },
-  { title: "Ajuda", href: "/help", icon: "help" },
-];
+export type NavSection = {
+  /** Omitted for the main section. */
+  title?: string;
+  items: NavItem[];
+};
 
 /** Whether `href` is the active entry for `pathname`, preferring the most specific match. */
 export function isNavItemActive(href: string, pathname: string, items: readonly NavItem[]): boolean {
