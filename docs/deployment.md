@@ -52,7 +52,7 @@ Server-only (Acessórias company sync — **never** `NEXT_PUBLIC_*`):
 
 1. Grant the operator/administrator roles in **Administração → Usuários** and check the requester departments in **Administração → Departamentos**.
 2. ~~Remove test data~~ — **done on 2026-10-15** with `supabase/maintenance/prelaunch_cleanup.sql` in mode `all` (every test request removed, numbering restarted at `GC-2026-000001`). It must never be run again.
-3. Confirm the catalog (services, fields, required flags) with the department leads.
+3. ~~Confirm the catalog~~ — done 2026-10-15 (roles and catalog reviewed). **Released for use.**
 
 ## 5. After each production deploy (smoke test)
 

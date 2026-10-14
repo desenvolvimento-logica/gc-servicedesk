@@ -209,7 +209,7 @@ Decisions approved 2026-10-15:
 - Sync: first run full, then incremental with `DtLastDH` (cursor = highest DtLastDH seen, kept only on success). Daily **Vercel Cron** at 09:00 UTC (06:00 São Paulo; the `luz-ia` team is on the Hobby plan, which allows only daily crons) at `/api/cron/companies-sync` (protected by `CRON_SECRET`), plus **Sincronizar agora** for administrators (Administração → Empresas). Runs never overlap; each is logged in `gestao_cadastros_company_sync_runs` (admin-readable).
 - Writes use the **Supabase secret key** (`service_role`) on the server only — the single writer of the company tables. `authenticated` only reads (RLS: anyone with access reads companies; administrators read the sync log). Inactive companies are kept but not offered.
 - New server-only variables: `SUPABASE_SECRET_KEY`, `ACESSORIAS_API_TOKEN`, `CRON_SECRET` (never `NEXT_PUBLIC_*`).
-- Vercel Hobby terms restrict use to non-commercial projects; consider the Pro plan for an office tool.
+- Accepted 2026-10-15: daily sync on the Hobby plan is enough (manual sync covers same-day needs); Vercel functions stay in `iad1` (US). Note: Vercel Hobby terms restrict use to non-commercial projects.
 
 ## Open items
 
