@@ -1,7 +1,7 @@
 # Environment Decisions (Phase 0)
 
 Status: Phase 0 complete.
-Last updated: 2026-10-14 (Phase 6).
+Last updated: 2026-10-15 (Phase 7).
 
 No secrets, keys or connection strings belong in this file.
 
@@ -114,6 +114,7 @@ All three exist in `public.users`.
 | `20261014120000_gestao_cadastros_requests` | 2026-10-14, verified |
 | `20261014150000_gestao_cadastros_request_workflow` | 2026-10-14, verified |
 | `20261014180000_gestao_cadastros_corrections` | 2026-10-14, verified |
+| `20261015090000_gestao_cadastros_reports` | 2026-10-15, verified |
 
 Note: the Supabase SQL Editor may not keep one session across statements, so migrations must not rely on temporary tables (`on commit drop`); seed data goes in a single statement with CTEs.
 
@@ -169,6 +170,18 @@ Decisions approved 2026-10-14:
 - `gestao_cadastros_create_request` now takes a third argument `p_original_request_id` (default null). Errors about the original use the DETAIL key `original_request_id`.
 - UI: "Solicitar correção" on closed requests opens the form with department, correction service and original preselected; company name/code are prefilled from the original (only when empty). Detail pages link original ↔ corrections; the queue filters by type and badges corrections.
 - Rework metrics (by original operator/service/period) are part of Phase 7 reporting; the data is in place.
+
+## Reports and export (Phase 7)
+
+Decisions approved 2026-10-14:
+- `/reports` and the CSV export: operators and administrators.
+- Period presets: current month (default), last 30 days, custom start/end dates (at most two years). The period applies to the **opening date** (São Paulo calendar days); resolution time is measured on the closed requests of that set.
+- Indicators: totals by status, by department, by service, average resolution time, by operator (current assignee) and rework (corrections by the original's operator and by the original's service). Optional filters: department, service, kind.
+- CSV: fixed request columns; with **one service selected**, its dynamic fields are added as columns (keyed by `field_key`, latest label/order). Excel pt-BR format: `;` separator, UTF-8 BOM, CRLF; cells starting with `= + - @` are prefixed with `'` (CSV injection). Exports are capped at 20,000 rows.
+
+Model:
+- `public.gestao_cadastros_report_summary(...)` (jsonb) and `public.gestao_cadastros_report_requests(...)` (paged rows, ≤ 1000 per call, optional field values) — `SECURITY INVOKER` (RLS applies) and staff-only, sharing `private.gestao_cadastros_report_base(...)`.
+- Indexes: `(opened_at desc)` and `(service_id, opened_at desc)` (replaces `(service_id)`). Text search in the queue uses `ilike` without trigram indexes: installing `pg_trgm` in the shared project is out of scope; revisit if volume grows.
 
 ## Open items
 
