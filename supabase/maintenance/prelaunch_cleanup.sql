@@ -1,6 +1,9 @@
 -- =============================================================================
 -- GC Service Desk — ONE-TIME pre-launch cleanup of test requests
 --
+-- EXECUTED on 2026-10-15 in mode 'all' (0 requests left, numbering
+-- restarted, guard triggers re-enabled). DO NOT RUN AGAIN.
+--
 -- NOT a migration. Run once, right before the system is released for real
 -- use, only with explicit approval. After launch, never run it again:
 -- request history is permanent (the guard triggers exist for that reason).

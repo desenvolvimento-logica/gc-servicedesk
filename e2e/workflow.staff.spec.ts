@@ -10,7 +10,8 @@ import { STAFF_STATE } from "../playwright.config";
  * reports/CSV. Everything it creates is marked "TESTE E2E" so it can be
  * removed before launch (supabase/maintenance/prelaunch_cleanup.sql).
  *
- * Writes real data: run only when intended (`pnpm test:e2e`).
+ * Writes real, permanent data (request history cannot be deleted after
+ * launch). Skipped unless explicitly enabled: `E2E_WRITE=1 pnpm test:e2e`.
  */
 
 const MARK = "TESTE E2E";
@@ -21,6 +22,7 @@ const DETAIL_URL = /\/requests\/[0-9a-f-]{36}$/;
 
 test.describe.configure({ mode: "serial" });
 test.skip(!existsSync(STAFF_STATE), "Sem sessão salva: rode `pnpm e2e:login` antes.");
+test.skip(process.env.E2E_WRITE !== "1", "Grava solicitações permanentes: habilite com E2E_WRITE=1.");
 
 /** Radix select: the accessible name excludes the required "*" marker. */
 async function pick(page: Page, label: string, option: string | RegExp) {

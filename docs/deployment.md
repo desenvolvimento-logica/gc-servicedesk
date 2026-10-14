@@ -51,7 +51,7 @@ Server-only (Acessórias company sync — **never** `NEXT_PUBLIC_*`):
 ## 4. Before release (with approval)
 
 1. Grant the operator/administrator roles in **Administração → Usuários** and check the requester departments in **Administração → Departamentos**.
-2. Remove test data: run `supabase/maintenance/prelaunch_cleanup.sql` once, choosing the mode (`e2e` = only automated-test requests; `all` = every request and restart numbering at `GC-<year>-000001`). After launch it must never be run again.
+2. ~~Remove test data~~ — **done on 2026-10-15** with `supabase/maintenance/prelaunch_cleanup.sql` in mode `all` (every test request removed, numbering restarted at `GC-2026-000001`). It must never be run again.
 3. Confirm the catalog (services, fields, required flags) with the department leads.
 
 ## 5. After each production deploy (smoke test)
@@ -66,4 +66,4 @@ Rollback of the app: Vercel → Deployments → previous deployment → *Promote
 ## 6. Automated tests
 
 - `pnpm check` — typecheck, lint, unit tests and build.
-- `pnpm test:e2e` — Playwright on `http://localhost:3000`. Signed-in tests reuse sessions saved once with `pnpm e2e:login` (staff) and `pnpm e2e:login:requester` (git-ignored in `e2e/.auth/`); without them those tests are skipped. **The staff flow writes real requests marked "TESTE E2E".**
+- `pnpm test:e2e` — Playwright on `http://localhost:3000`. Signed-in tests reuse sessions saved once with `pnpm e2e:login` (staff) and `pnpm e2e:login:requester` (git-ignored in `e2e/.auth/`); without them those tests are skipped. **The staff flow writes real, permanent requests marked "TESTE E2E"** and is skipped unless `E2E_WRITE=1` is set; after launch, avoid it in production (no cleanup is possible anymore).
