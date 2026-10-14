@@ -17,11 +17,13 @@ import {
   type RequestFormInput,
   type RequestPayload,
 } from "@/lib/requests/form-schema";
-import { companyPrefill, ORIGINAL_REQUEST_FIELD } from "@/lib/requests/corrections";
+import type { Company } from "@/lib/companies/types";
+import { COMPANY_CODE_FIELD, COMPANY_NAME_FIELD, companyPrefill, ORIGINAL_REQUEST_FIELD } from "@/lib/requests/corrections";
 import { formatPendingValue } from "@/lib/requests/format";
 import type { CorrectableRequest, CreatedRequest, RequestableDepartment, RequestableService } from "@/lib/requests/types";
 import { createRequest } from "@/server/requests/actions";
 
+import { CompanyPicker } from "./company-picker";
 import { DynamicField } from "./dynamic-field";
 import { OriginalRequestPicker } from "./original-request-picker";
 import { RequestSteps, type RequestStep } from "./request-steps";
@@ -156,6 +158,9 @@ const ORIGINAL_REQUIRED_MESSAGE = "Selecione a solicitação original.";
 
 function RequestForm({ service, initialOriginal, step, onStepChange, onCreated }: RequestFormProps) {
   const isCorrection = service.kind === "correction";
+  const hasCompanyFields = [COMPANY_NAME_FIELD, COMPANY_CODE_FIELD].every((key) =>
+    service.fields.some((field) => field.fieldKey === key),
+  );
   const schema = useMemo(() => buildRequestSchema(service.fields), [service.fields]);
   const form = useForm<RequestFormInput, unknown, RequestPayload>({
     resolver: zodResolver(schema),
@@ -176,6 +181,12 @@ function RequestForm({ service, initialOriginal, step, onStepChange, onCreated }
     for (const [key, value] of Object.entries(companyPrefill(service.fields, form.getValues(), next))) {
       if (value) form.setValue(key, value, { shouldValidate: form.formState.isSubmitted });
     }
+  };
+
+  const selectCompany = (company: Company) => {
+    const options = { shouldValidate: form.formState.isSubmitted, shouldDirty: true };
+    form.setValue(COMPANY_NAME_FIELD, company.legalName, options);
+    form.setValue(COMPANY_CODE_FIELD, String(company.id), options);
   };
 
   const submitReview = form.handleSubmit((payload) => {
@@ -226,6 +237,7 @@ function RequestForm({ service, initialOriginal, step, onStepChange, onCreated }
           {isCorrection ? (
             <OriginalRequestPicker serviceId={service.id} value={original} onChange={selectOriginal} error={originalError} />
           ) : null}
+          {hasCompanyFields ? <CompanyPicker onSelect={selectCompany} /> : null}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {service.fields.map((field) => (
               <DynamicField

@@ -116,6 +116,7 @@ All three exist in `public.users`.
 | `20261014180000_gestao_cadastros_corrections` | 2026-10-14, verified |
 | `20261015090000_gestao_cadastros_reports` | 2026-10-15, verified |
 | `20261015120000_gestao_cadastros_user_admin` | 2026-10-15, verified |
+| `20261015150000_gestao_cadastros_companies` | 2026-10-15, verified |
 
 Note: the Supabase SQL Editor may not keep one session across statements, so migrations must not rely on temporary tables (`on commit drop`); seed data goes in a single statement with CTEs.
 
@@ -199,6 +200,16 @@ Decisions approved 2026-10-15:
 - Guards: an administrator cannot revoke their own administrator role; the last active administrator cannot be revoked (table lock serializes concurrent changes).
 - Every change is appended to `gestao_cadastros_role_events` (who, which role, granted/revoked, by whom, when); readable by administrators only (RLS), append-only (trigger).
 - Revoking the operator role does not reassign their open requests; the request page shows the assignee as "(inativo)" until someone reassigns.
+
+## Client companies from Acessórias
+
+Decisions approved 2026-10-15:
+- Companies come from the Acessórias API (`GET /companies/ListAll`, 20 per page, 100 requests/min, Bearer token) into `gestao_cadastros_companies` — a local copy is required because the API cannot search by name.
+- "Código da empresa" in the forms is the **Acessórias company ID**. In services with `nome_empresa` and `codigo_empresa`, a picker (active companies only) fills both; the fields stay editable.
+- Sync: first run full, then incremental with `DtLastDH` (cursor = highest DtLastDH seen, kept only on success). Daily **Vercel Cron** at 09:00 UTC (06:00 São Paulo; the `luz-ia` team is on the Hobby plan, which allows only daily crons) at `/api/cron/companies-sync` (protected by `CRON_SECRET`), plus **Sincronizar agora** for administrators (Administração → Empresas). Runs never overlap; each is logged in `gestao_cadastros_company_sync_runs` (admin-readable).
+- Writes use the **Supabase secret key** (`service_role`) on the server only — the single writer of the company tables. `authenticated` only reads (RLS: anyone with access reads companies; administrators read the sync log). Inactive companies are kept but not offered.
+- New server-only variables: `SUPABASE_SECRET_KEY`, `ACESSORIAS_API_TOKEN`, `CRON_SECRET` (never `NEXT_PUBLIC_*`).
+- Vercel Hobby terms restrict use to non-commercial projects; consider the Pro plan for an office tool.
 
 ## Open items
 

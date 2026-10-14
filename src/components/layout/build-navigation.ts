@@ -36,6 +36,7 @@ export function buildNavigation(viewer: Viewer): NavSection[] {
         { title: "Serviços", href: "/admin/services", icon: "services" },
         { title: "Departamentos", href: "/admin/departments", icon: "departments" },
         { title: "Usuários", href: "/admin/users", icon: "users" },
+        { title: "Empresas", href: "/admin/companies", icon: "companies" },
       ],
     });
   }

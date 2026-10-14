@@ -13,6 +13,7 @@ Hosting: Vercel. Database/Auth: the existing unified office Supabase project (`o
 | 5 | `20261014180000_gestao_cadastros_corrections` | idem |
 | 6 | `20261015090000_gestao_cadastros_reports` | idem |
 | 7 | `20261015120000_gestao_cadastros_user_admin` | idem |
+| 8 | `20261015150000_gestao_cadastros_companies` | idem |
 
 Migrations are applied by hand in the Supabase SQL Editor after review (never `supabase db push`: the project is shared with other apps). Each has a rollback in `supabase/rollbacks/`. Full audit: `supabase/verification/phase8_security_audit.check.sql`.
 
@@ -37,7 +38,15 @@ Migrations are applied by hand in the Supabase SQL Editor after review (never `s
 
 Both were added to **Production** on 2026-10-15 (`vercel env add … production`). Builds fail with a ZodError on these names when they are missing.
 
-No other variable is needed: the app never uses a service-role key.
+Server-only (Acessórias company sync — **never** `NEXT_PUBLIC_*`):
+
+| Name | Value |
+|---|---|
+| `SUPABASE_SECRET_KEY` | Supabase → Project Settings → API Keys → *secret* key (`sb_secret_…`); used only by the company sync |
+| `ACESSORIAS_API_TOKEN` | Acessórias → ⚙ → API Token |
+| `CRON_SECRET` | random string ≥ 32 chars; Vercel Cron sends it to `/api/cron/companies-sync` |
+
+`vercel.json` schedules the sync daily at 09:00 UTC (06:00 São Paulo).
 
 ## 4. Before release (with approval)
 

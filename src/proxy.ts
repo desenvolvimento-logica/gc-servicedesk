@@ -3,8 +3,11 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { publicEnv } from "@/lib/env";
 
-/** Reachable without a session. */
-const PUBLIC_PATHS = ["/login", "/auth/callback"];
+/**
+ * Reachable without a session. /api/cron authenticates with CRON_SECRET
+ * (Vercel Cron) instead of a user session.
+ */
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/api/cron"];
 
 const isPublicPath = (pathname: string) =>
   PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
