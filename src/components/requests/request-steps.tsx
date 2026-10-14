@@ -26,7 +26,7 @@ export function RequestSteps({ current }: { current: RequestStep }) {
               <span
                 className={cn(
                   "flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
-                  done || active ? "bg-brand text-brand-ink" : "bg-muted text-muted-foreground",
+                  done || active ? "bg-brand text-primary-foreground" : "bg-muted text-muted-foreground",
                 )}
               >
                 {done && !active ? <Check aria-hidden className="size-5" /> : index + 1}

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 import { SignInForm, SignInFormFallback } from "./sign-in-form";
 
@@ -47,11 +48,12 @@ const highlights: readonly Highlight[] = [
 
 export default function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
-    <main className="min-h-screen bg-background">
+    <main className="relative min-h-screen bg-background">
+      <ThemeToggle className="absolute top-4 right-4" />
       <div className="mx-auto grid min-h-screen max-w-7xl items-center gap-10 px-4 py-10 md:px-8 lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-16">
         <section className="hidden flex-col gap-10 lg:flex">
           <div className="flex items-center gap-6">
-            <BrandLogo tone="on-light" className="w-44" priority />
+            <BrandLogo tone="on-page" className="w-44" priority />
             <span aria-hidden className="h-12 w-px bg-border" />
             <div>
               <p className="text-xl font-bold">GC Service Desk</p>
@@ -93,7 +95,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
           className="flex flex-col gap-8 rounded-2xl border bg-card p-8 shadow-sm md:p-10"
         >
           <div className="flex flex-col items-center gap-3 border-b pb-8 text-center">
-            <BrandLogo tone="on-light" className="w-48" />
+            <BrandLogo tone="on-page" className="w-48" />
             <div>
               <p className="text-2xl font-bold">
                 GC Service <span className="text-brand">Desk</span>

@@ -57,7 +57,7 @@ export default function NewRequestPage({ searchParams }: NewRequestPageProps) {
               <ol className="flex flex-col gap-3">
                 {rules.map((rule, index) => (
                   <li key={rule.title} className="flex gap-3 rounded-lg bg-brand-soft p-3">
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-semibold text-brand-ink">
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-semibold text-primary-foreground">
                       {index + 1}
                     </span>
                     <div className="space-y-1">

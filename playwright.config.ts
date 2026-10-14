@@ -34,7 +34,7 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [
-    { name: "anonymous", testMatch: /(smoke|headers)\.spec\.ts/, use: { ...devices["Desktop Chrome"] } },
+    { name: "anonymous", testMatch: /(smoke|headers|theme)\.spec\.ts/, use: { ...devices["Desktop Chrome"] } },
     signedIn("staff", STAFF_STATE, /\.staff\.spec\.ts/),
     signedIn("requester", REQUESTER_STATE, /\.requester\.spec\.ts/),
     // Interactive, run only through `pnpm e2e:login[:requester]` (headed, waits for you).

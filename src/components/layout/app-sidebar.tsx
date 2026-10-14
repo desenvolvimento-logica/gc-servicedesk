@@ -30,7 +30,7 @@ export function AppSidebar({ sections }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="h-(--app-header-height) shrink-0 justify-center gap-1.5 bg-brand-ink px-5 py-0 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
+      <SidebarHeader className="h-(--app-header-height) shrink-0 justify-center gap-1.5 bg-brand-chrome px-5 py-0 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
         <Link href="/" aria-label="Ir para o início">
           <BrandLogo tone="on-dark" className="w-28 group-data-[collapsible=icon]:hidden" priority />
           <BrandMark className="hidden group-data-[collapsible=icon]:block" />

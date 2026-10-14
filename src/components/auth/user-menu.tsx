@@ -23,7 +23,7 @@ export function UserMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger className="flex items-center gap-3 rounded-lg p-1 pr-2 text-left outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50">
         <Avatar className="size-10">
-          <AvatarFallback className="bg-brand-ink text-sm font-semibold text-white">
+          <AvatarFallback className="bg-brand-chrome text-sm font-semibold text-white">
             {initials(viewer.name)}
           </AvatarFallback>
         </Avatar>

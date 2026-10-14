@@ -7,13 +7,26 @@ import logoOnDark from "@/assets/brand/logo-on-dark.png";
 import logoOnLight from "@/assets/brand/logo-on-light.png";
 
 type BrandLogoProps = {
-  /** Background the logo sits on: the text color is inverted accordingly. */
-  tone: "on-light" | "on-dark";
+  /**
+   * Background the logo sits on: the text color is inverted accordingly.
+   * "on-page" follows the light/dark theme of the page background.
+   */
+  tone: "on-light" | "on-dark" | "on-page";
   className?: string;
   priority?: boolean;
 };
 
 export function BrandLogo({ tone, className, priority }: BrandLogoProps) {
+  if (tone === "on-page") {
+    // Both are rendered and swapped with CSS so server HTML matches any theme.
+    return (
+      <>
+        <BrandLogo tone="on-light" className={cn("dark:hidden", className)} priority={priority} />
+        <BrandLogo tone="on-dark" className={cn("hidden dark:block", className)} priority={priority} />
+      </>
+    );
+  }
+
   return (
     <Image
       src={tone === "on-dark" ? logoOnDark : logoOnLight}

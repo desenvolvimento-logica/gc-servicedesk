@@ -18,7 +18,7 @@ export default function AccessDeniedPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <section className="flex w-full max-w-lg flex-col items-center gap-6 rounded-2xl border bg-card p-8 text-center shadow-sm md:p-10">
-        <BrandLogo tone="on-light" className="w-40" />
+        <BrandLogo tone="on-page" className="w-40" />
         <span className="flex size-14 items-center justify-center rounded-full bg-status-danger-soft text-status-danger">
           <ShieldAlert aria-hidden className="size-7" />
         </span>

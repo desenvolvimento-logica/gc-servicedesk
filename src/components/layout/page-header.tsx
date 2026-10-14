@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 
 import { UserMenu } from "@/components/auth/user-menu";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -63,6 +64,7 @@ export function PageHeader({ title, breadcrumbs = [], actions }: PageHeaderProps
       </div>
       <div className="flex items-center gap-3">
         {actions}
+        <ThemeToggle />
         <UserMenu />
       </div>
     </header>

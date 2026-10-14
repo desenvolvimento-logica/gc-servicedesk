@@ -38,7 +38,7 @@ function ShellFallback() {
   return (
     <div aria-busy="true" aria-label="Carregando" className="flex min-h-screen">
       <div className="hidden w-64 shrink-0 flex-col border-r bg-card md:flex">
-        <div className="h-(--app-header-height) bg-brand-ink" />
+        <div className="h-(--app-header-height) bg-brand-chrome" />
         <div className="space-y-3 p-4">
           <Skeleton className="h-10" />
           <Skeleton className="h-10" />
