@@ -6,7 +6,13 @@ import type { RequestSummary } from "@/lib/requests/types";
 
 import { RequestStatusBadge } from "./request-status-badge";
 
-export function RequestsTable({ requests }: { requests: readonly RequestSummary[] }) {
+type RequestsTableProps = {
+  requests: readonly RequestSummary[];
+  /** Operational view: shows the assignee column. */
+  showAssignee?: boolean;
+};
+
+export function RequestsTable({ requests, showAssignee = false }: RequestsTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -15,6 +21,7 @@ export function RequestsTable({ requests }: { requests: readonly RequestSummary[
           <TableHead>Serviço</TableHead>
           <TableHead>Empresa</TableHead>
           <TableHead>Status</TableHead>
+          {showAssignee ? <TableHead>Responsável</TableHead> : null}
           <TableHead>Abertura</TableHead>
           <TableHead>Última atualização</TableHead>
         </TableRow>
@@ -35,6 +42,11 @@ export function RequestsTable({ requests }: { requests: readonly RequestSummary[
             <TableCell>
               <RequestStatusBadge status={request.status} />
             </TableCell>
+            {showAssignee ? (
+              <TableCell className={request.assignedToName ? undefined : "text-muted-foreground"}>
+                {request.assignedToName ?? "Não atribuído"}
+              </TableCell>
+            ) : null}
             <TableCell className="text-muted-foreground tabular-nums">{formatDateTime(request.openedAt)}</TableCell>
             <TableCell className="text-muted-foreground tabular-nums">{formatDateTime(request.updatedAt)}</TableCell>
           </TableRow>

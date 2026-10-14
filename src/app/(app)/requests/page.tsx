@@ -1,10 +1,11 @@
-import { ChevronLeft, ChevronRight, FileText, Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
+import { Pagination } from "@/components/requests/pagination";
 import { RequestsTable } from "@/components/requests/requests-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,39 +80,7 @@ async function RequestsList({ searchParams }: Pick<MyRequestsPageProps, "searchP
   return (
     <div className="flex flex-col gap-4">
       <RequestsTable requests={result.items} />
-      <nav aria-label="Paginação" className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-        <span>
-          {result.total} {result.total === 1 ? "solicitação" : "solicitações"} · página {result.page} de {result.pageCount}
-        </span>
-        <div className="flex gap-2">
-          <PageLink page={result.page - 1} disabled={result.page <= 1} label="Anterior" icon="previous" />
-          <PageLink page={result.page + 1} disabled={result.page >= result.pageCount} label="Próxima" icon="next" />
-        </div>
-      </nav>
+      <Pagination page={result.page} pageCount={result.pageCount} total={result.total} hrefFor={(page) => `/requests?page=${page}`} />
     </div>
-  );
-}
-
-function PageLink({ page, disabled, label, icon }: { page: number; disabled: boolean; label: string; icon: "previous" | "next" }) {
-  const content = (
-    <>
-      {icon === "previous" ? <ChevronLeft aria-hidden /> : null}
-      {label}
-      {icon === "next" ? <ChevronRight aria-hidden /> : null}
-    </>
-  );
-
-  if (disabled) {
-    return (
-      <Button variant="outline" size="sm" disabled>
-        {content}
-      </Button>
-    );
-  }
-
-  return (
-    <Button asChild variant="outline" size="sm">
-      <Link href={`/requests?page=${page}`}>{content}</Link>
-    </Button>
   );
 }

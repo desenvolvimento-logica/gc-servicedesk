@@ -10,6 +10,7 @@ import type {
   RequestableService,
   RequestDetail,
   RequestEvent,
+  RequestEventDetails,
   RequestSummary,
   SubmittedField,
 } from "@/lib/requests/types";
@@ -140,11 +141,15 @@ const requestRowSchema = z.object({
   status: z.enum(REQUEST_STATUSES),
   opened_at: z.string(),
   updated_at: z.string(),
+  assigned_to_name: z.string().nullable(),
 });
 
-const REQUEST_COLUMNS = "id, request_number, service_name, dpto_name, company_name, status, opened_at, updated_at";
+export const REQUEST_COLUMNS =
+  "id, request_number, service_name, dpto_name, company_name, status, opened_at, updated_at, assigned_to_name";
 
-function toSummary(row: z.infer<typeof requestRowSchema>): RequestSummary {
+export const requestRowsSchema = z.array(requestRowSchema);
+
+export function toSummary(row: z.infer<typeof requestRowSchema>): RequestSummary {
   return {
     id: row.id,
     requestNumber: row.request_number,
@@ -154,6 +159,7 @@ function toSummary(row: z.infer<typeof requestRowSchema>): RequestSummary {
     status: row.status,
     openedAt: row.opened_at,
     updatedAt: row.updated_at,
+    assignedToName: row.assigned_to_name,
   };
 }
 
@@ -178,7 +184,7 @@ export async function listMyRequests(page: number, pageSize = REQUESTS_PAGE_SIZE
 
   const total = count ?? 0;
   return {
-    items: z.array(requestRowSchema).parse(data ?? []).map(toSummary),
+    items: requestRowsSchema.parse(data ?? []).map(toSummary),
     total,
     page: current,
     pageCount: Math.max(1, Math.ceil(total / pageSize)),
@@ -197,19 +203,44 @@ const valueRowSchema = z.object({
   value_options: z.array(z.object({ value: z.string(), label: z.string() })).nullable(),
 });
 
+const eventValueSchema = z
+  .object({
+    status: z.enum(REQUEST_STATUSES).optional(),
+    name: z.string().nullable().optional(),
+    text: z.string().optional(),
+  })
+  .nullable();
+
 const eventRowSchema = z.object({
   id: z.number().int(),
   event_type: z.enum(REQUEST_EVENT_TYPES),
+  visibility: z.enum(["requester", "internal"]),
   actor_name: z.string().nullable(),
+  previous_value: eventValueSchema,
+  new_value: eventValueSchema,
   created_at: z.string(),
 });
+
+function toEventDetails(row: z.infer<typeof eventRowSchema>): RequestEventDetails {
+  const details: RequestEventDetails = {};
+  const previous = row.previous_value;
+  const next = row.new_value;
+  if (previous?.status) details.fromStatus = previous.status;
+  if (next?.status) details.toStatus = next.status;
+  if (previous?.name) details.previousAssigneeName = previous.name;
+  if (next?.name) details.assigneeName = next.name;
+  if (next?.text) details.text = next.text;
+  return details;
+}
 
 const detailRowSchema = requestRowSchema.extend({
   service_kind: z.enum(SERVICE_KINDS),
   requester_name: z.string().nullable(),
   requester_email: z.string().nullable(),
   company_code: z.string().nullable(),
+  assigned_to: z.number().int().nullable(),
   completed_at: z.string().nullable(),
+  closed_by_name: z.string().nullable(),
   gestao_cadastros_request_values: z.array(valueRowSchema),
   gestao_cadastros_request_events: z.array(eventRowSchema),
 });
@@ -224,9 +255,9 @@ export async function getRequestDetail(requestId: string): Promise<RequestDetail
   const { data, error } = await supabase
     .from("gestao_cadastros_requests")
     .select(
-      `${REQUEST_COLUMNS}, service_kind, requester_name, requester_email, company_code, completed_at,
+      `${REQUEST_COLUMNS}, service_kind, requester_name, requester_email, company_code, assigned_to, completed_at, closed_by_name,
        gestao_cadastros_request_values (field_key, label, field_type, sort_order, value_text, value_number, value_date, value_boolean, value_options),
-       gestao_cadastros_request_events (id, event_type, actor_name, created_at)`,
+       gestao_cadastros_request_events (id, event_type, visibility, actor_name, previous_value, new_value, created_at)`,
     )
     .eq("id", requestId)
     .maybeSingle();
@@ -241,7 +272,9 @@ export async function getRequestDetail(requestId: string): Promise<RequestDetail
     requesterName: row.requester_name,
     requesterEmail: row.requester_email,
     companyCode: row.company_code,
+    assignedTo: row.assigned_to,
     completedAt: row.completed_at,
+    closedByName: row.closed_by_name,
     values: row.gestao_cadastros_request_values
       .toSorted((a, b) => a.sort_order - b.sort_order)
       .map(
@@ -262,8 +295,10 @@ export async function getRequestDetail(requestId: string): Promise<RequestDetail
         (event): RequestEvent => ({
           id: event.id,
           eventType: event.event_type,
+          visibility: event.visibility,
           actorName: event.actor_name,
           createdAt: event.created_at,
+          details: toEventDetails(event),
         }),
       ),
   };

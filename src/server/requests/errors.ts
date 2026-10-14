@@ -45,3 +45,19 @@ function parseDetail(details: string | null | undefined): Record<string, string>
     return null;
   }
 }
+
+/** Message for a failed staff workflow RPC (assign, status change, note). */
+export function workflowErrorMessage(error: Pick<RpcError, "code">): string {
+  switch (error.code) {
+    case "42501":
+      return FORBIDDEN_MESSAGE;
+    case "P0002":
+      return "Solicitação não encontrada.";
+    case "55000":
+      return "Esta ação não é permitida no status atual da solicitação. A página foi atualizada.";
+    case "22023":
+      return "Dados inválidos. Atualize a página e tente novamente.";
+    default:
+      return "Não foi possível concluir a ação. Tente novamente.";
+  }
+}

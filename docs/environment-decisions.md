@@ -1,7 +1,7 @@
 # Environment Decisions (Phase 0)
 
 Status: Phase 0 complete.
-Last updated: 2026-10-14 (Phase 4).
+Last updated: 2026-10-14 (Phase 5).
 
 No secrets, keys or connection strings belong in this file.
 
@@ -112,6 +112,7 @@ All three exist in `public.users`.
 | `20261013160000_gestao_cadastros_roles_and_requester_departments` | 2026-10-13, verified |
 | `20261013180000_gestao_cadastros_service_catalog` | 2026-10-13, verified |
 | `20261014120000_gestao_cadastros_requests` | 2026-10-14, verified |
+| `20261014150000_gestao_cadastros_request_workflow` | 2026-10-14, verified |
 
 Note: the Supabase SQL Editor may not keep one session across statements, so migrations must not rely on temporary tables (`on commit drop`); seed data goes in a single statement with CTEs.
 
@@ -142,6 +143,20 @@ Model:
 - Writes only through `public.gestao_cadastros_create_request(service_id, values)` (`SECURITY DEFINER`): derives the requester from the session, checks the department permission, validates values against the current active fields (required, type, length, e-mail, date, options) and writes request, values and event atomically. Validation errors return SQLSTATE 22023 with `{ field_key: message }` in DETAIL.
 - `authenticated` has only SELECT on these tables. RLS: staff see all requests; requesters see only their own; values follow the request; `internal` events are staff-only. Counters are not exposed.
 - The server action validates first with a Zod schema built from the same metadata (`src/lib/requests/form-schema.ts`); the database validates again.
+
+## Operational workflow (Phase 5)
+
+Decisions approved 2026-10-14:
+- **Transitions** are forward-only: `open → in_progress`, `open → closed`, `in_progress → closed`. Nothing returns to `open` (RPC and trigger); `closed` is final.
+- **Assignment**: any staff member may assign or reassign a request to any **active operator**, or remove the assignee. Assigning does not change the status.
+- **Closing** requires no assignment and no comment (for now). It records `completed_at`, `closed_by` and `closed_by_name`.
+- **Visibility**: status changes, assignment and closing are requester-visible history events; internal notes (`internal_note_added`) are staff-only.
+- Closed requests accept no assignment, status change or new internal note.
+
+Model:
+- `gestao_cadastros_requests` gained `assigned_to_name` (snapshot; `public.users` names are not readable by every role), `closed_by` (`ON DELETE RESTRICT`) and `closed_by_name`.
+- RPCs (`SECURITY DEFINER`, staff only, row lock + history event in one transaction): `gestao_cadastros_assign_request`, `gestao_cadastros_change_request_status`, `gestao_cadastros_add_internal_note`; `gestao_cadastros_operators()` lists assignable operators. Error codes: 42501 not staff, P0002 not found, 55000 not allowed in the current status, 22023 invalid input.
+- Queue (`/queue`, staff only): server-side filters in the URL (search on protocol/company/code/service, status — default "em aberto", department, service, assignee, opening period in São Paulo time) and pagination.
 
 ## Open items
 

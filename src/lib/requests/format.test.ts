@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { EMPTY_VALUE, formatDateTime, formatIsoDate, formatPendingValue, formatSubmittedField } from "./format";
+import { describeEvent, EMPTY_VALUE, formatDateTime, formatIsoDate, formatPendingValue, formatSubmittedField } from "./format";
 import type { RequestFormField } from "./form-schema";
 import type { SubmittedField } from "./types";
 
@@ -72,5 +72,21 @@ describe("dates", () => {
 
   it("formats timestamps in São Paulo time", () => {
     expect(formatDateTime("2026-10-14T13:05:00Z")).toBe("14/10/2026, 10:05");
+  });
+});
+
+describe("describeEvent", () => {
+  it("describes workflow events", () => {
+    expect(describeEvent({ eventType: "status_changed", details: { fromStatus: "open", toStatus: "in_progress" } })).toBe(
+      "Aberta → Em andamento",
+    );
+    expect(describeEvent({ eventType: "assigned", details: { assigneeName: "Ana" } })).toBe("Atribuída a Ana.");
+    expect(describeEvent({ eventType: "assigned", details: { previousAssigneeName: "Ana", assigneeName: "Bia" } })).toBe(
+      "De Ana para Bia.",
+    );
+    expect(describeEvent({ eventType: "unassigned", details: { previousAssigneeName: "Ana" } })).toBe(
+      "Ana deixou de ser o responsável.",
+    );
+    expect(describeEvent({ eventType: "internal_note_added", details: { text: "Nota" } })).toBe("Nota");
   });
 });

@@ -60,6 +60,12 @@ export async function getAdministrator(): Promise<Viewer | null> {
   return session.status === "authorized" && session.viewer.isAdministrator ? session.viewer : null;
 }
 
+/** For Server Actions: the operator/administrator, or null. */
+export async function getStaff(): Promise<Viewer | null> {
+  const session = await getSession();
+  return session.status === "authorized" && session.viewer.isStaff ? session.viewer : null;
+}
+
 /** For Server Actions: the viewer when they may open requests, or null. */
 export async function getRequestOpener(): Promise<Viewer | null> {
   const session = await getSession();

@@ -1,5 +1,6 @@
 import type { RequestFormField, SubmittedValue } from "./form-schema";
-import type { SubmittedField } from "./types";
+import { requestStatusLabels } from "./status";
+import type { RequestEvent, SubmittedField } from "./types";
 
 /** Display formatting (pt-BR) of request values and dates. */
 
@@ -56,4 +57,28 @@ export function formatPendingValue(field: RequestFormField, value: SubmittedValu
   if (field.fieldType === "date") return formatIsoDate(value);
   if (field.fieldType === "select") return optionLabel(value);
   return value;
+}
+
+/** One-line description of a history event (pt-BR). */
+export function describeEvent(event: Pick<RequestEvent, "eventType" | "details">): string | null {
+  const { details } = event;
+  const status = (value: RequestEvent["details"]["toStatus"]) => (value ? requestStatusLabels[value] : EMPTY_VALUE);
+
+  switch (event.eventType) {
+    case "request_created":
+      return "Solicitação registrada.";
+    case "status_changed":
+    case "request_closed":
+      return `${status(details.fromStatus)} → ${status(details.toStatus)}`;
+    case "assigned":
+      return details.previousAssigneeName
+        ? `De ${details.previousAssigneeName} para ${details.assigneeName ?? EMPTY_VALUE}.`
+        : `Atribuída a ${details.assigneeName ?? EMPTY_VALUE}.`;
+    case "unassigned":
+      return details.previousAssigneeName ? `${details.previousAssigneeName} deixou de ser o responsável.` : null;
+    case "internal_note_added":
+      return details.text ?? null;
+    case "attachment_added":
+      return null;
+  }
 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { FORBIDDEN_MESSAGE } from "@/server/catalog/errors";
 
-import { createRequestErrorResult, INVALID_VALUES_MESSAGE, SERVICE_UNAVAILABLE_MESSAGE } from "./errors";
+import { createRequestErrorResult, INVALID_VALUES_MESSAGE, SERVICE_UNAVAILABLE_MESSAGE, workflowErrorMessage } from "./errors";
 
 describe("createRequestErrorResult", () => {
   it("maps database validation details to field errors", () => {
@@ -33,5 +33,13 @@ describe("createRequestErrorResult", () => {
   it("never echoes unknown database messages", () => {
     const result = createRequestErrorResult({ code: "XX000", message: "internal detail" });
     expect(result.message).not.toContain("internal detail");
+  });
+});
+
+describe("workflowErrorMessage", () => {
+  it("maps workflow errors to Portuguese messages", () => {
+    expect(workflowErrorMessage({ code: "42501" })).toBe(FORBIDDEN_MESSAGE);
+    expect(workflowErrorMessage({ code: "55000" })).toContain("status atual");
+    expect(workflowErrorMessage({ code: "XX000" })).toBe("Não foi possível concluir a ação. Tente novamente.");
   });
 });
