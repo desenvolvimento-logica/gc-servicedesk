@@ -24,6 +24,7 @@ Migrations are applied by hand in the Supabase SQL Editor after review (never `s
 ## 3. Vercel project
 
 - Project **`gc-servicedesk`** in the Vercel team **`luz-ia`**, connected to `desenvolvimento-logica/gc-servicedesk` (a push to `main` deploys to production); framework **Next.js**, **pnpm**, Node.js **24.x**.
+- `vercel.json` sets the framework to **Next.js** (the project was created with the "Other" preset, which fails with *No Output Directory named "public"*).
 - Production aliases: `gc-servicedesk.vercel.app` (the one allow-listed in Supabase Auth — use this URL), `gc-servicedesk-luz-ia.vercel.app`, `gc-servicedesk-git-main-luz-ia.vercel.app`. Signing in through the other aliases fails because their callbacks are not allow-listed.
 - Local link: `vercel link --project gc-servicedesk --scope luz-ia` (creates the git-ignored `.vercel/` and adds a `VERCEL_OIDC_TOKEN` to `.env.local`).
 - Environment variables (Production; Preview only if previews are allow-listed, which they are not today):
