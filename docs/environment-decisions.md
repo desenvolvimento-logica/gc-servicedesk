@@ -1,7 +1,7 @@
 # Environment Decisions (Phase 0)
 
 Status: Phase 0 complete.
-Last updated: 2026-10-13 (Phase 3).
+Last updated: 2026-10-14 (Phase 4).
 
 No secrets, keys or connection strings belong in this file.
 
@@ -111,6 +111,7 @@ All three exist in `public.users`.
 |---|---|
 | `20261013160000_gestao_cadastros_roles_and_requester_departments` | 2026-10-13, verified |
 | `20261013180000_gestao_cadastros_service_catalog` | 2026-10-13, verified |
+| `20261014120000_gestao_cadastros_requests` | 2026-10-14, verified |
 
 Note: the Supabase SQL Editor may not keep one session across statements, so migrations must not rely on temporary tables (`on commit drop`); seed data goes in a single statement with CTEs.
 
@@ -124,6 +125,24 @@ Note: the Supabase SQL Editor may not keep one session across statements, so mig
 - RLS: administrators read/write; operators read all; requesters read only active services/fields of departments they may open requests for. `gestao_cadastros_requester_departments` gained admin-only INSERT/UPDATE.
 - `public.gestao_cadastros_admin_departments()` lists corporate departments for GC administrators only.
 
+## Requests (Phase 4)
+
+Decisions approved 2026-10-14:
+- **Request number** `GC-YYYY-NNNNNN`; the sequence restarts every calendar year (São Paulo time), kept in `gestao_cadastros_request_counters`.
+- **Status** is an enum `gestao_cadastros_request_status`: `open` (Aberta), `in_progress` (Em andamento), `closed` (Concluída). `completed_at` is set if and only if the status is `closed`; a closed request cannot be updated (trigger).
+- **Requester** is always the signed-in user, including operators/administrators (no "open on behalf of"). The request department is the selected service's department; the requester's own corporate department is snapshotted separately.
+- **Foreign keys to `public.users`** (requester, assignee, event actor) are `ON DELETE RESTRICT`: a corporate user with GC history cannot be deleted; offboarding is done by disabling the account in Entra ID.
+- **Attachments** deferred: `file` fields stay inactive and are rejected on submission.
+
+Model:
+- `gestao_cadastros_requests` keeps snapshots of service name/kind, department name and requester name/e-mail/department; the snapshot columns are immutable (trigger). `company_name`/`company_code` are copied from the submitted `nome_empresa`/`codigo_empresa` values (field-key convention) for search and reporting.
+- `gestao_cadastros_request_values`: one row per field active at submission (empty optional fields included), with the field's key/label/type/order snapshot, typed value columns and option labels — later catalog edits never change what was submitted. Append-only.
+- `gestao_cadastros_request_events`: append-only history with `visibility` (`requester` | `internal`); internal notes must be `internal`. Phase 4 writes `request_created`.
+- Nothing is deleted or rewritten: triggers reject DELETE on requests and UPDATE/DELETE on values/events, for every role.
+- Writes only through `public.gestao_cadastros_create_request(service_id, values)` (`SECURITY DEFINER`): derives the requester from the session, checks the department permission, validates values against the current active fields (required, type, length, e-mail, date, options) and writes request, values and event atomically. Validation errors return SQLSTATE 22023 with `{ field_key: message }` in DETAIL.
+- `authenticated` has only SELECT on these tables. RLS: staff see all requests; requesters see only their own; values follow the request; `internal` events are staff-only. Counters are not exposed.
+- The server action validates first with a Zod schema built from the same metadata (`src/lib/requests/form-schema.ts`); the database validates again.
+
 ## Open items
 
-- **Foreign keys into shared tables** — catalog (Phase 3): services reference requester departments with `ON DELETE RESTRICT`, so a corporate `public.dpto` row that has GC services cannot be deleted (deactivate it in GC instead); `created_by`/`updated_by` use `ON DELETE SET NULL`. Requests (Phase 4): keep the FK for integrity but snapshot requester name/email/department on the request, and decide `ON DELETE` behavior during that migration review.
+- **Foreign keys into shared tables** — catalog (Phase 3): services reference requester departments with `ON DELETE RESTRICT`, so a corporate `public.dpto` row that has GC services cannot be deleted (deactivate it in GC instead); `created_by`/`updated_by` use `ON DELETE SET NULL`. Requests (Phase 4): `ON DELETE RESTRICT` to `public.users`, with requester name/e-mail/department snapshotted on the request (decided 2026-10-14).

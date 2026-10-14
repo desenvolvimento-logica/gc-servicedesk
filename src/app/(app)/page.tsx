@@ -5,15 +5,19 @@ import { Suspense } from "react";
 
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
+import { RequestsTable } from "@/components/requests/requests-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireViewer } from "@/server/auth/session";
 import { canOpenRequests } from "@/server/auth/viewer";
+import { listMyRequests } from "@/server/requests/queries";
 
 export const metadata: Metadata = {
   title: "Painel",
 };
+
+const RECENT_REQUESTS = 5;
 
 /**
  * Static copy renders immediately; anything that depends on the viewer
@@ -48,6 +52,12 @@ export default function HomePage() {
                 <FileText aria-hidden className="size-5" />
                 Minhas solicitações recentes
               </CardTitle>
+              <Button asChild variant="link" className="px-0">
+                <Link href="/requests">
+                  Ver todas
+                  <ChevronRight aria-hidden />
+                </Link>
+              </Button>
             </CardHeader>
             <CardContent>
               <Suspense fallback={<Skeleton className="h-48 rounded-xl" />}>
@@ -94,9 +104,10 @@ export default function HomePage() {
 }
 
 async function RecentRequests() {
-  await requireViewer();
+  const { items } = await listMyRequests(1, RECENT_REQUESTS);
 
-  // Listed from the database once requests exist (Phase 4).
+  if (items.length > 0) return <RequestsTable requests={items} />;
+
   return (
     <EmptyState
       icon={FileText}

@@ -60,6 +60,12 @@ export async function getAdministrator(): Promise<Viewer | null> {
   return session.status === "authorized" && session.viewer.isAdministrator ? session.viewer : null;
 }
 
+/** For Server Actions: the viewer when they may open requests, or null. */
+export async function getRequestOpener(): Promise<Viewer | null> {
+  const session = await getSession();
+  return session.status === "authorized" && canOpenRequests(session.viewer) ? session.viewer : null;
+}
+
 export async function requireRequestOpener(): Promise<Viewer> {
   const viewer = await requireViewer();
   if (!canOpenRequests(viewer)) redirect("/access-denied");

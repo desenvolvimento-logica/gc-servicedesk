@@ -8,15 +8,24 @@ type FormFieldProps = {
   label: string;
   error?: string;
   hint?: string;
+  /** Shows the required marker next to the label. */
+  required?: boolean;
   className?: string;
   children: ReactNode;
 };
 
 /** Label, control and validation message. The control must use `id` and `aria-describedby={`${id}-message`}`. */
-export function FormField({ id, label, error, hint, className, children }: FormFieldProps) {
+export function FormField({ id, label, error, hint, required, className, children }: FormFieldProps) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>
+        {label}
+        {required ? (
+          <span aria-hidden className="text-destructive">
+            *
+          </span>
+        ) : null}
+      </Label>
       {children}
       {error ? (
         <p id={`${id}-message`} role="alert" className="text-xs text-destructive">
