@@ -12,6 +12,7 @@ Hosting: Vercel. Database/Auth: the existing unified office Supabase project (`o
 | 4 | `20261014150000_gestao_cadastros_request_workflow` | idem |
 | 5 | `20261014180000_gestao_cadastros_corrections` | idem |
 | 6 | `20261015090000_gestao_cadastros_reports` | idem |
+| 7 | `20261015120000_gestao_cadastros_user_admin` | idem |
 
 Migrations are applied by hand in the Supabase SQL Editor after review (never `supabase db push`: the project is shared with other apps). Each has a rollback in `supabase/rollbacks/`. Full audit: `supabase/verification/phase8_security_audit.check.sql`.
 
@@ -40,7 +41,7 @@ No other variable is needed: the app never uses a service-role key.
 
 ## 4. Before release (with approval)
 
-1. Provision GC roles in `gestao_cadastros_user_roles` (active operators; administrators) and check the requester departments in **Administração → Departamentos**.
+1. Grant the operator/administrator roles in **Administração → Usuários** and check the requester departments in **Administração → Departamentos**.
 2. Remove test data: run `supabase/maintenance/prelaunch_cleanup.sql` once, choosing the mode (`e2e` = only automated-test requests; `all` = every request and restart numbering at `GC-<year>-000001`). After launch it must never be run again.
 3. Confirm the catalog (services, fields, required flags) with the department leads.
 

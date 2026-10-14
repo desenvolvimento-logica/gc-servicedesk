@@ -1,4 +1,4 @@
-import { Building2, ChartColumn, CircleHelp, FileText, Headset, House, Settings, SquarePlus } from "lucide-react";
+import { Building2, ChartColumn, CircleHelp, FileText, Headset, House, Settings, SquarePlus, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export const navIcons = {
@@ -10,6 +10,7 @@ export const navIcons = {
   reports: ChartColumn,
   services: Settings,
   departments: Building2,
+  users: Users,
 } satisfies Record<string, LucideIcon>;
 
 export type NavIconName = keyof typeof navIcons;

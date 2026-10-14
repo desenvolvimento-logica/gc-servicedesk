@@ -115,6 +115,7 @@ All three exist in `public.users`.
 | `20261014150000_gestao_cadastros_request_workflow` | 2026-10-14, verified |
 | `20261014180000_gestao_cadastros_corrections` | 2026-10-14, verified |
 | `20261015090000_gestao_cadastros_reports` | 2026-10-15, verified |
+| `20261015120000_gestao_cadastros_user_admin` | 2026-10-15, verified |
 
 Note: the Supabase SQL Editor may not keep one session across statements, so migrations must not rely on temporary tables (`on commit drop`); seed data goes in a single statement with CTEs.
 
@@ -190,6 +191,14 @@ Decisions approved 2026-10-15:
 - **E2E data**: the staff flow writes real requests marked company "TESTE E2E" / code "E2E". All test requests are removed **before release** with `supabase/maintenance/prelaunch_cleanup.sql` (one-time, approval required; mode `e2e` or `all`). It is the only sanctioned path that bypasses the history guards and must never run after launch.
 - **Security headers** (next.config): `frame-ancestors 'none'`/`X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`; `X-Powered-By` removed. A full script CSP (nonces) is deferred.
 - Deployment checklist: `docs/deployment.md`.
+
+## User and role administration (post-Phase 8)
+
+- Screen **Administração → Usuários** (`/admin/users`), administrators only. Lists corporate users (`public.users`, read-only for this app — users are never created here) with department, requester access, whether they ever signed in, and the GC roles.
+- Roles are granted/revoked only through `public.gestao_cadastros_set_user_role(user_id, role, granted)` (`SECURITY DEFINER`, administrator check). Revoking deactivates the `gestao_cadastros_user_roles` row; nothing is deleted. The app keeps SELECT-only on that table.
+- Guards: an administrator cannot revoke their own administrator role; the last active administrator cannot be revoked (table lock serializes concurrent changes).
+- Every change is appended to `gestao_cadastros_role_events` (who, which role, granted/revoked, by whom, when); readable by administrators only (RLS), append-only (trigger).
+- Revoking the operator role does not reassign their open requests; the request page shows the assignee as "(inativo)" until someone reassigns.
 
 ## Open items
 

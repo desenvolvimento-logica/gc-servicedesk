@@ -13,7 +13,7 @@ import { REQUESTER_STATE } from "../playwright.config";
 test.skip(!existsSync(REQUESTER_STATE), "Sem sessão de solicitante: rode `pnpm e2e:login:requester` antes.");
 
 test("staff and admin areas are denied", async ({ page }) => {
-  for (const path of ["/queue", "/reports", "/admin/services"]) {
+  for (const path of ["/queue", "/reports", "/admin/services", "/admin/users"]) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/access-denied$/);
   }
