@@ -31,6 +31,7 @@ export async function listQueue(filters: QueueFilters, pageSize = REQUESTS_PAGE_
 
   if (filters.status === ACTIVE) query = query.in("status", ["open", "in_progress"]);
   else if (filters.status !== ALL) query = query.eq("status", filters.status);
+  if (filters.kind) query = query.eq("service_kind", filters.kind);
   if (filters.department) query = query.eq("dpto_id", filters.department);
   if (filters.service) query = query.eq("service_id", filters.service);
   if (filters.assignee === UNASSIGNED) query = query.is("assigned_to", null);

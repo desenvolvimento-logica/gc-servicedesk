@@ -26,6 +26,7 @@ export type RequestSummary = {
   id: string;
   requestNumber: string;
   serviceName: string;
+  serviceKind: ServiceKind;
   departmentName: string;
   companyName: string | null;
   status: RequestStatus;
@@ -67,14 +68,37 @@ export type RequestEvent = {
 
 export type Operator = { userId: number; name: string; email: string };
 
+/** A request referenced by a correction (or a correction of a request). */
+export type LinkedRequest = {
+  id: string;
+  requestNumber: string;
+  serviceName: string;
+  status: RequestStatus;
+};
+
+/** A closed request that may be the original of a correction. */
+export type CorrectableRequest = {
+  id: string;
+  requestNumber: string;
+  serviceName: string;
+  companyName: string | null;
+  companyCode: string | null;
+  completedAt: string;
+};
+
 export type RequestDetail = RequestSummary & {
-  serviceKind: ServiceKind;
+  dptoId: number;
   requesterName: string | null;
   requesterEmail: string | null;
   companyCode: string | null;
   assignedTo: number | null;
   completedAt: string | null;
   closedByName: string | null;
+  /** Correction only: the original request and its executing operator. */
+  originalRequest: LinkedRequest | null;
+  originalOperatorName: string | null;
+  /** Corrections opened for this request (that the viewer may read). */
+  corrections: LinkedRequest[];
   values: SubmittedField[];
   events: RequestEvent[];
 };

@@ -1,4 +1,5 @@
-import { ArrowLeft, FileText, History, Lock, MessageSquareText, Zap } from "lucide-react";
+import { ArrowLeft, FileText, History, Lock, MessageSquareText, RotateCcw, Zap } from "lucide-react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -15,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { serviceKindLabels } from "@/lib/catalog/field-types";
 import { EMPTY_VALUE, formatDateTime, formatSubmittedField } from "@/lib/requests/format";
-import type { RequestDetail } from "@/lib/requests/types";
+import type { LinkedRequest, RequestDetail } from "@/lib/requests/types";
 import { isLocked } from "@/lib/requests/workflow";
 import { requireViewer } from "@/server/auth/session";
 import type { Viewer } from "@/server/auth/viewer";
@@ -64,7 +65,7 @@ async function RequestContent({ params }: RequestPageProps) {
             </Link>
           </Button>
         ) : null}
-        <SummaryCard request={request} />
+        <SummaryCard request={request} showOperator={viewer.isStaff} />
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-semibold">
@@ -103,12 +104,43 @@ async function RequestContent({ params }: RequestPageProps) {
           </CardContent>
         </Card>
 
+        {request.corrections.length > 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <RotateCcw aria-hidden className="size-5" />
+                Correções desta solicitação
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="flex flex-col gap-2">
+                {request.corrections.map((correction) => (
+                  <li key={correction.id} className="flex items-center justify-between gap-3">
+                    <RequestLink request={correction} />
+                    <RequestStatusBadge status={correction.status} />
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ) : null}
+
         {isLocked(request.status) ? (
           <Card>
-            <CardContent className="flex items-start gap-3 text-sm text-muted-foreground">
-              <Lock aria-hidden className="mt-0.5 size-4 shrink-0" />
-              Esta solicitação foi concluída e não pode ser reaberta. Se precisar de um novo ajuste, abra uma nova
-              solicitação.
+            <CardContent className="flex flex-col gap-4 text-sm text-muted-foreground">
+              <p className="flex items-start gap-3">
+                <Lock aria-hidden className="mt-0.5 size-4 shrink-0" />
+                Esta solicitação foi concluída e não pode ser reaberta. Se algo precisar ser corrigido ou refeito, abra
+                uma solicitação de correção vinculada a ela.
+              </p>
+              {viewer.requestDepartments.some((department) => department.id === request.dptoId) ? (
+                <Button asChild variant="outline">
+                  <Link href={`/requests/new?original=${request.id}`}>
+                    <RotateCcw aria-hidden />
+                    Solicitar correção
+                  </Link>
+                </Button>
+              ) : null}
             </CardContent>
           </Card>
         ) : null}
@@ -169,8 +201,17 @@ async function StaffPanels({ viewer, request }: { viewer: Viewer; request: Reque
   );
 }
 
-function SummaryCard({ request }: { request: RequestDetail }) {
-  const items = [
+function RequestLink({ request }: { request: LinkedRequest }) {
+  return (
+    <Link href={`/requests/${request.id}`} className="flex flex-col text-sm hover:underline">
+      <span className="font-mono font-semibold text-status-info">{request.requestNumber}</span>
+      <span className="text-xs text-muted-foreground">{request.serviceName}</span>
+    </Link>
+  );
+}
+
+function SummaryCard({ request, showOperator }: { request: RequestDetail; showOperator: boolean }) {
+  const items: { label: string; value: ReactNode }[] = [
     { label: "Departamento", value: request.departmentName },
     { label: "Solicitante", value: request.requesterName ?? request.requesterEmail ?? EMPTY_VALUE },
     { label: "Empresa", value: request.companyName ?? EMPTY_VALUE },
@@ -179,6 +220,10 @@ function SummaryCard({ request }: { request: RequestDetail }) {
     { label: "Abertura", value: formatDateTime(request.openedAt) },
     { label: "Conclusão", value: request.completedAt ? formatDateTime(request.completedAt) : EMPTY_VALUE },
   ];
+  if (request.originalRequest) {
+    items.push({ label: "Solicitação original", value: <RequestLink request={request.originalRequest} /> });
+    if (showOperator) items.push({ label: "Operador da original", value: request.originalOperatorName ?? EMPTY_VALUE });
+  }
 
   return (
     <Card>

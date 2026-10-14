@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { SERVICE_KINDS, type ServiceKind } from "@/lib/catalog/field-types";
+
 import { REQUEST_STATUSES, type RequestStatus } from "./status";
 
 /**
@@ -17,6 +19,8 @@ export type QueueStatusFilter = RequestStatus | typeof ACTIVE | typeof ALL;
 export type QueueFilters = {
   q: string;
   status: QueueStatusFilter;
+  /** New requests or corrections; null for both. */
+  kind: ServiceKind | null;
   department: number | null;
   service: string | null;
   /** Operator user id, "unassigned", or null for anyone. */
@@ -58,6 +62,7 @@ export function parseQueueFilters(params: RawParams): QueueFilters {
   return {
     q: sanitizeSearch(first(params.q)),
     status: statusFilter.safeParse(first(params.status)).data ?? ACTIVE,
+    kind: z.enum(SERVICE_KINDS).safeParse(first(params.kind)).data ?? null,
     department: positiveInt.safeParse(first(params.department)).data ?? null,
     service: z.uuid().safeParse(first(params.service)).data ?? null,
     assignee: assignee === UNASSIGNED ? UNASSIGNED : (positiveInt.safeParse(assignee).data ?? null),
@@ -72,6 +77,7 @@ export function queueFiltersToSearch(filters: Partial<QueueFilters>): string {
   const params = new URLSearchParams();
   if (filters.q) params.set("q", filters.q);
   if (filters.status && filters.status !== ACTIVE) params.set("status", filters.status);
+  if (filters.kind) params.set("kind", filters.kind);
   if (filters.department) params.set("department", String(filters.department));
   if (filters.service) params.set("service", filters.service);
   if (filters.assignee) params.set("assignee", String(filters.assignee));

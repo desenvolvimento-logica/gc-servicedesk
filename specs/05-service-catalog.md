@@ -50,5 +50,7 @@ Every service exposes `Observações` as a free-text field in addition to servic
 ## Correction/rework service
 Each requester department must have `Correção de Cadastro / Refazer` with at least: Nome da empresa, Código da empresa, Serviço original que precisa de correção, referência à solicitação/OS anterior se houver, Motivo da correção and Observações.
 
+Since Phase 6 the original request is a mandatory link chosen in the form (closed request of the same department), which already identifies the original service and protocol. The seeded fields "Serviço original que precisa de correção" (`servico_original`) and "Solicitação/OS anterior" (`solicitacao_anterior`) overlap with that link but are kept active for now (decided 2026-10-14); they can be deactivated later in the catalog without code changes.
+
 ## Open configuration questions
 Before seed creation confirm field types, which fields are selects, allowed values for Tributação, Contabilidade, Impostos and Prestados/Tomados, and attachment constraints.

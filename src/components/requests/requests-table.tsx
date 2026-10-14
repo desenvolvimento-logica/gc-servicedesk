@@ -1,6 +1,8 @@
 import Link from "next/link";
 
+import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { serviceKindLabels } from "@/lib/catalog/field-types";
 import { EMPTY_VALUE, formatDateTime } from "@/lib/requests/format";
 import type { RequestSummary } from "@/lib/requests/types";
 
@@ -35,7 +37,14 @@ export function RequestsTable({ requests, showAssignee = false }: RequestsTableP
               </Link>
             </TableCell>
             <TableCell>
-              <span className="block">{request.serviceName}</span>
+              <span className="block">
+                {request.serviceName}
+                {request.serviceKind === "correction" ? (
+                  <Badge variant="outline" className="ml-2">
+                    {serviceKindLabels.correction}
+                  </Badge>
+                ) : null}
+              </span>
               <span className="text-xs text-muted-foreground">{request.departmentName}</span>
             </TableCell>
             <TableCell>{request.companyName ?? EMPTY_VALUE}</TableCell>

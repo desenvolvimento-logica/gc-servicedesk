@@ -10,6 +10,7 @@ import type {
   RequestableService,
   RequestDetail,
   RequestEvent,
+  LinkedRequest,
   RequestEventDetails,
   RequestSummary,
   SubmittedField,
@@ -136,6 +137,7 @@ const requestRowSchema = z.object({
   id: z.uuid(),
   request_number: z.string(),
   service_name: z.string(),
+  service_kind: z.enum(SERVICE_KINDS),
   dpto_name: z.string(),
   company_name: z.string().nullable(),
   status: z.enum(REQUEST_STATUSES),
@@ -145,7 +147,7 @@ const requestRowSchema = z.object({
 });
 
 export const REQUEST_COLUMNS =
-  "id, request_number, service_name, dpto_name, company_name, status, opened_at, updated_at, assigned_to_name";
+  "id, request_number, service_name, service_kind, dpto_name, company_name, status, opened_at, updated_at, assigned_to_name";
 
 export const requestRowsSchema = z.array(requestRowSchema);
 
@@ -154,6 +156,7 @@ export function toSummary(row: z.infer<typeof requestRowSchema>): RequestSummary
     id: row.id,
     requestNumber: row.request_number,
     serviceName: row.service_name,
+    serviceKind: row.service_kind,
     departmentName: row.dpto_name,
     companyName: row.company_name,
     status: row.status,
@@ -234,7 +237,9 @@ function toEventDetails(row: z.infer<typeof eventRowSchema>): RequestEventDetail
 }
 
 const detailRowSchema = requestRowSchema.extend({
-  service_kind: z.enum(SERVICE_KINDS),
+  dpto_id: z.number().int(),
+  original_request_id: z.uuid().nullable(),
+  original_operator_name: z.string().nullable(),
   requester_name: z.string().nullable(),
   requester_email: z.string().nullable(),
   company_code: z.string().nullable(),
@@ -244,6 +249,29 @@ const detailRowSchema = requestRowSchema.extend({
   gestao_cadastros_request_values: z.array(valueRowSchema),
   gestao_cadastros_request_events: z.array(eventRowSchema),
 });
+
+const linkedRowSchema = z.object({
+  id: z.uuid(),
+  request_number: z.string(),
+  service_name: z.string(),
+  status: z.enum(REQUEST_STATUSES),
+});
+
+/** Original or corrections of a request; RLS drops the ones the viewer may not read. */
+async function loadLinkedRequests(column: "id" | "original_request_id", value: string): Promise<LinkedRequest[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("gestao_cadastros_requests")
+    .select("id, request_number, service_name, status")
+    .eq(column, value)
+    .order("opened_at");
+  if (error) throw new Error(`Failed to load linked requests: ${error.message}`);
+
+  return z
+    .array(linkedRowSchema)
+    .parse(data)
+    .map((row) => ({ id: row.id, requestNumber: row.request_number, serviceName: row.service_name, status: row.status }));
+}
 
 /** Null when the request does not exist or the viewer may not read it (RLS). */
 export async function getRequestDetail(requestId: string): Promise<RequestDetail | null> {
@@ -255,7 +283,7 @@ export async function getRequestDetail(requestId: string): Promise<RequestDetail
   const { data, error } = await supabase
     .from("gestao_cadastros_requests")
     .select(
-      `${REQUEST_COLUMNS}, service_kind, requester_name, requester_email, company_code, assigned_to, completed_at, closed_by_name,
+      `${REQUEST_COLUMNS}, dpto_id, original_request_id, original_operator_name, requester_name, requester_email, company_code, assigned_to, completed_at, closed_by_name,
        gestao_cadastros_request_values (field_key, label, field_type, sort_order, value_text, value_number, value_date, value_boolean, value_options),
        gestao_cadastros_request_events (id, event_type, visibility, actor_name, previous_value, new_value, created_at)`,
     )
@@ -265,10 +293,17 @@ export async function getRequestDetail(requestId: string): Promise<RequestDetail
   if (!data) return null;
 
   const row = detailRowSchema.parse(data);
+  const [originals, corrections] = await Promise.all([
+    row.original_request_id ? loadLinkedRequests("id", row.original_request_id) : Promise.resolve([]),
+    loadLinkedRequests("original_request_id", row.id),
+  ]);
 
   return {
     ...toSummary(row),
-    serviceKind: row.service_kind,
+    dptoId: row.dpto_id,
+    originalRequest: originals[0] ?? null,
+    originalOperatorName: row.original_operator_name,
+    corrections,
     requesterName: row.requester_name,
     requesterEmail: row.requester_email,
     companyCode: row.company_code,

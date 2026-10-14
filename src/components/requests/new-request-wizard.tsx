@@ -17,23 +17,31 @@ import {
   type RequestFormInput,
   type RequestPayload,
 } from "@/lib/requests/form-schema";
+import { companyPrefill, ORIGINAL_REQUEST_FIELD } from "@/lib/requests/corrections";
 import { formatPendingValue } from "@/lib/requests/format";
-import type { CreatedRequest, RequestableDepartment, RequestableService } from "@/lib/requests/types";
+import type { CorrectableRequest, CreatedRequest, RequestableDepartment, RequestableService } from "@/lib/requests/types";
 import { createRequest } from "@/server/requests/actions";
 
 import { DynamicField } from "./dynamic-field";
+import { OriginalRequestPicker } from "./original-request-picker";
 import { RequestSteps, type RequestStep } from "./request-steps";
 
 type NewRequestWizardProps = {
   departments: readonly RequestableDepartment[];
+  /** Preselection for "Solicitar correção" from a closed request. */
+  initialCorrection?: { departmentId: number; serviceId: string; original: CorrectableRequest };
 };
 
 /** Department → service → dynamic form → review → confirmation. */
-export function NewRequestWizard({ departments }: NewRequestWizardProps) {
-  const [departmentId, setDepartmentId] = useState(departments.length === 1 ? String(departments[0]?.id) : "");
-  const [serviceId, setServiceId] = useState("");
+export function NewRequestWizard({ departments, initialCorrection }: NewRequestWizardProps) {
+  const [departmentId, setDepartmentId] = useState(
+    initialCorrection ? String(initialCorrection.departmentId) : departments.length === 1 ? String(departments[0]?.id) : "",
+  );
+  const [serviceId, setServiceId] = useState(initialCorrection?.serviceId ?? "");
   const [step, setStep] = useState<RequestStep>("fill");
   const [created, setCreated] = useState<CreatedRequest | null>(null);
+  // Used only by the first correction form rendered for the preselected service.
+  const [initialOriginal, setInitialOriginal] = useState(initialCorrection?.original ?? null);
 
   const department = departments.find((item) => String(item.id) === departmentId);
   const service = department?.services.find((item) => item.id === serviceId);
@@ -46,6 +54,7 @@ export function NewRequestWizard({ departments }: NewRequestWizardProps) {
 
   const startOver = () => {
     setCreated(null);
+    setInitialOriginal(null);
     setServiceId("");
     changeStep("fill");
   };
@@ -116,6 +125,7 @@ export function NewRequestWizard({ departments }: NewRequestWizardProps) {
             <RequestForm
               key={service.id}
               service={service}
+              initialOriginal={service.id === initialCorrection?.serviceId ? initialOriginal : null}
               step={step}
               onStepChange={changeStep}
               onCreated={(result) => {
@@ -136,34 +146,63 @@ export function NewRequestWizard({ departments }: NewRequestWizardProps) {
 
 type RequestFormProps = {
   service: RequestableService;
+  initialOriginal: CorrectableRequest | null;
   step: RequestStep;
   onStepChange: (step: RequestStep) => void;
   onCreated: (created: CreatedRequest) => void;
 };
 
-function RequestForm({ service, step, onStepChange, onCreated }: RequestFormProps) {
+const ORIGINAL_REQUIRED_MESSAGE = "Selecione a solicitação original.";
+
+function RequestForm({ service, initialOriginal, step, onStepChange, onCreated }: RequestFormProps) {
+  const isCorrection = service.kind === "correction";
   const schema = useMemo(() => buildRequestSchema(service.fields), [service.fields]);
   const form = useForm<RequestFormInput, unknown, RequestPayload>({
     resolver: zodResolver(schema),
-    defaultValues: defaultRequestValues(service.fields),
+    defaultValues: initialOriginal
+      ? { ...defaultRequestValues(service.fields), ...companyPrefill(service.fields, {}, initialOriginal) }
+      : defaultRequestValues(service.fields),
   });
+  const [original, setOriginal] = useState<CorrectableRequest | null>(initialOriginal);
+  const [originalError, setOriginalError] = useState<string | undefined>();
   const [review, setReview] = useState<RequestPayload | null>(null);
   const [sending, setSending] = useState(false);
   const { errors } = form.formState;
 
-  const onReview = form.handleSubmit((payload) => {
+  const selectOriginal = (next: CorrectableRequest | null) => {
+    setOriginal(next);
+    setOriginalError(undefined);
+    if (!next) return;
+    for (const [key, value] of Object.entries(companyPrefill(service.fields, form.getValues(), next))) {
+      if (value) form.setValue(key, value, { shouldValidate: form.formState.isSubmitted });
+    }
+  };
+
+  const submitReview = form.handleSubmit((payload) => {
+    if (isCorrection && !original) return;
     setReview(payload);
     onStepChange("review");
   });
+
+  const onReview = (event: React.FormEvent<HTMLFormElement>) => {
+    if (isCorrection && !original) setOriginalError(ORIGINAL_REQUIRED_MESSAGE);
+    return submitReview(event);
+  };
 
   const onSend = async () => {
     setSending(true);
     try {
       // The server reloads the field definitions and validates the raw values again.
-      const result = await createRequest({ serviceId: service.id, values: form.getValues() });
+      const result = await createRequest({
+        serviceId: service.id,
+        values: form.getValues(),
+        originalRequestId: original?.id ?? null,
+      });
       if (!result.ok) {
         if (result.fieldErrors) onStepChange("fill");
-        applyServerErrors(result, form.setError);
+        const { [ORIGINAL_REQUEST_FIELD]: originalMessages, ...fieldErrors } = result.fieldErrors ?? {};
+        if (originalMessages?.[0]) setOriginalError(originalMessages[0]);
+        applyServerErrors({ ...result, fieldErrors }, form.setError);
         return;
       }
       onCreated(result.data);
@@ -184,6 +223,9 @@ function RequestForm({ service, step, onStepChange, onCreated }: RequestFormProp
 
       {step === "fill" ? (
         <form onSubmit={onReview} noValidate className="flex flex-col gap-6">
+          {isCorrection ? (
+            <OriginalRequestPicker serviceId={service.id} value={original} onChange={selectOriginal} error={originalError} />
+          ) : null}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {service.fields.map((field) => (
               <DynamicField
@@ -208,6 +250,14 @@ function RequestForm({ service, step, onStepChange, onCreated }: RequestFormProp
             Confira os dados abaixo. Depois de enviada, a solicitação não poderá ser alterada por você.
           </p>
           <dl className="grid gap-x-6 gap-y-4 rounded-lg border p-4 sm:grid-cols-2 xl:grid-cols-3">
+            {original ? (
+              <div className="sm:col-span-full">
+                <dt className="text-xs font-medium text-muted-foreground">Solicitação original</dt>
+                <dd className="mt-0.5 text-sm">
+                  <span className="font-mono font-semibold">{original.requestNumber}</span> · {original.serviceName}
+                </dd>
+              </div>
+            ) : null}
             {service.fields.map((field) => (
               <div
                 key={field.id}

@@ -17,6 +17,7 @@ import {
   type QueueFilters,
   type QueueStatusFilter,
 } from "@/lib/requests/queue-filters";
+import { SERVICE_KINDS, type ServiceKind } from "@/lib/catalog/field-types";
 import { REQUEST_STATUSES, requestStatusLabels } from "@/lib/requests/status";
 import type { Operator } from "@/lib/requests/types";
 
@@ -33,11 +34,14 @@ const statusOptions: { value: QueueStatusFilter; label: string }[] = [
   { value: ALL, label: "Todos os status" },
 ];
 
+const kindLabels: Record<ServiceKind, string> = { standard: "Novas solicitações", correction: "Correções / Refazer" };
+
 /** Filter state lives in the URL; the server re-parses and validates it. */
 export function QueueFiltersForm({ filters, departments, services, operators }: QueueFiltersFormProps) {
   const router = useRouter();
   const [q, setQ] = useState(filters.q);
   const [status, setStatus] = useState<string>(filters.status);
+  const [kind, setKind] = useState<string>(filters.kind ?? ALL);
   const [department, setDepartment] = useState(filters.department ? String(filters.department) : ALL);
   const [service, setService] = useState(filters.service ?? ALL);
   const [assignee, setAssignee] = useState(filters.assignee ? String(filters.assignee) : ALL);
@@ -53,6 +57,7 @@ export function QueueFiltersForm({ filters, departments, services, operators }: 
       `/queue${queueFiltersToSearch({
         q: q.trim(),
         status: status as QueueStatusFilter,
+        kind: kind === ALL ? null : (kind as ServiceKind),
         department: department === ALL ? null : Number(department),
         service: service === ALL ? null : service,
         assignee: assignee === ALL ? null : assignee === UNASSIGNED ? UNASSIGNED : Number(assignee),
@@ -104,6 +109,21 @@ export function QueueFiltersForm({ filters, departments, services, operators }: 
               {operators.map((operator) => (
                 <SelectItem key={operator.userId} value={String(operator.userId)}>
                   {operator.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+        <FormField id="queue-kind" label="Tipo">
+          <Select value={kind} onValueChange={setKind}>
+            <SelectTrigger id="queue-kind" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Todos os tipos</SelectItem>
+              {SERVICE_KINDS.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {kindLabels[item]}
                 </SelectItem>
               ))}
             </SelectContent>

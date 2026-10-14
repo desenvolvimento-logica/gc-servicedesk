@@ -21,6 +21,7 @@ describe("parseQueueFilters", () => {
     expect(parseQueueFilters({})).toEqual({
       q: "",
       status: "active",
+      kind: null,
       department: null,
       service: null,
       assignee: null,
@@ -51,7 +52,12 @@ describe("parseQueueFilters", () => {
       to: null,
       page: 1,
     });
-    expect(parseQueueFilters({ status: "reopened", assignee: "12" })).toMatchObject({ status: "active", assignee: 12 });
+    expect(parseQueueFilters({ status: "reopened", assignee: "12", kind: "other" })).toMatchObject({
+      status: "active",
+      assignee: 12,
+      kind: null,
+    });
+    expect(parseQueueFilters({ kind: "correction" }).kind).toBe("correction");
   });
 
   it("round-trips through the URL, omitting defaults", () => {

@@ -7,7 +7,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { NewRequestWizard } from "@/components/requests/new-request-wizard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { listRequestableDepartments } from "@/server/requests/queries";
+import type { RequestableDepartment, RequestDetail } from "@/lib/requests/types";
+import { getRequestDetail, listRequestableDepartments } from "@/server/requests/queries";
 
 export const metadata: Metadata = {
   title: "Nova Solicitação",
@@ -28,14 +29,19 @@ const rules = [
   },
 ] as const;
 
-export default function NewRequestPage() {
+type NewRequestPageProps = {
+  /** `original`: closed request to correct ("Solicitar correção"). */
+  searchParams: Promise<{ original?: string | string[] }>;
+};
+
+export default function NewRequestPage({ searchParams }: NewRequestPageProps) {
   return (
     <>
       <PageHeader title="Nova Solicitação" breadcrumbs={[{ label: "Solicitações", href: "/requests" }, { label: "Nova Solicitação" }]} />
       <div className="grid gap-6 p-4 md:p-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">
           <Suspense fallback={<Skeleton className="h-96 rounded-xl" />}>
-            <RequestWizard />
+            <RequestWizard searchParams={searchParams} />
           </Suspense>
         </div>
 
@@ -69,9 +75,13 @@ export default function NewRequestPage() {
   );
 }
 
-async function RequestWizard() {
+async function RequestWizard({ searchParams }: NewRequestPageProps) {
   // Redirects users who may not open requests.
   const departments = await listRequestableDepartments();
+  const { original: rawOriginal } = await searchParams;
+  const originalId = Array.isArray(rawOriginal) ? rawOriginal[0] : rawOriginal;
+  // RLS: requesters only read their own requests. The database re-checks on submit.
+  const original = originalId ? await getRequestDetail(originalId) : null;
 
   if (departments.length === 0) {
     return (
@@ -84,5 +94,26 @@ async function RequestWizard() {
     );
   }
 
-  return <NewRequestWizard departments={departments} />;
+  return <NewRequestWizard departments={departments} initialCorrection={correctionPreselection(departments, original)} />;
+}
+
+function correctionPreselection(departments: readonly RequestableDepartment[], original: RequestDetail | null) {
+  if (!original || original.status !== "closed" || !original.completedAt) return undefined;
+  const service = departments
+    .find((department) => department.id === original.dptoId)
+    ?.services.find((item) => item.kind === "correction");
+  if (!service) return undefined;
+
+  return {
+    departmentId: original.dptoId,
+    serviceId: service.id,
+    original: {
+      id: original.id,
+      requestNumber: original.requestNumber,
+      serviceName: original.serviceName,
+      companyName: original.companyName,
+      companyCode: original.companyCode,
+      completedAt: original.completedAt,
+    },
+  };
 }

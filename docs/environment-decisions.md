@@ -1,7 +1,7 @@
 # Environment Decisions (Phase 0)
 
 Status: Phase 0 complete.
-Last updated: 2026-10-14 (Phase 5).
+Last updated: 2026-10-14 (Phase 6).
 
 No secrets, keys or connection strings belong in this file.
 
@@ -113,6 +113,7 @@ All three exist in `public.users`.
 | `20261013180000_gestao_cadastros_service_catalog` | 2026-10-13, verified |
 | `20261014120000_gestao_cadastros_requests` | 2026-10-14, verified |
 | `20261014150000_gestao_cadastros_request_workflow` | 2026-10-14, verified |
+| `20261014180000_gestao_cadastros_corrections` | 2026-10-14, verified |
 
 Note: the Supabase SQL Editor may not keep one session across statements, so migrations must not rely on temporary tables (`on commit drop`); seed data goes in a single statement with CTEs.
 
@@ -157,6 +158,17 @@ Model:
 - `gestao_cadastros_requests` gained `assigned_to_name` (snapshot; `public.users` names are not readable by every role), `closed_by` (`ON DELETE RESTRICT`) and `closed_by_name`.
 - RPCs (`SECURITY DEFINER`, staff only, row lock + history event in one transaction): `gestao_cadastros_assign_request`, `gestao_cadastros_change_request_status`, `gestao_cadastros_add_internal_note`; `gestao_cadastros_operators()` lists assignable operators. Error codes: 42501 not staff, P0002 not found, 55000 not allowed in the current status, 22023 invalid input.
 - Queue (`/queue`, staff only): server-side filters in the URL (search on protocol/company/code/service, status — default "em aberto", department, service, assignee, opening period in São Paulo time) and pagination.
+
+## Corrections / rework (Phase 6)
+
+Decisions approved 2026-10-14:
+- A "Correção de Cadastro / Refazer" request **always** references exactly one original request (`original_request_id`, enforced by a CHECK on `service_kind`). There is no correction without an original for now; standard requests never reference one.
+- The original must be **closed** and of the **same department**. Requesters may only pick their own requests; staff may pick any request of the department.
+- The original is chosen in a searchable list (most recent first; typing filters by protocol, company, code or service) — both "select from a list" and "type the protocol".
+- The correction snapshots the original's executing operator in `original_operator_id`/`original_operator_name`: the assignee at closing, else who closed it. Link and snapshot are immutable (guard trigger).
+- `gestao_cadastros_create_request` now takes a third argument `p_original_request_id` (default null). Errors about the original use the DETAIL key `original_request_id`.
+- UI: "Solicitar correção" on closed requests opens the form with department, correction service and original preselected; company name/code are prefilled from the original (only when empty). Detail pages link original ↔ corrections; the queue filters by type and badges corrections.
+- Rework metrics (by original operator/service/period) are part of Phase 7 reporting; the data is in place.
 
 ## Open items
 
