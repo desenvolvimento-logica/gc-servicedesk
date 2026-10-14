@@ -46,3 +46,9 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Playwright sessions (signed-in cookies) and reports
+/e2e/.auth/
+/test-results/
+/playwright-report/
+

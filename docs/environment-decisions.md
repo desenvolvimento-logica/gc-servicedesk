@@ -1,7 +1,7 @@
 # Environment Decisions (Phase 0)
 
 Status: Phase 0 complete.
-Last updated: 2026-10-15 (Phase 7).
+Last updated: 2026-10-15 (Phase 8).
 
 No secrets, keys or connection strings belong in this file.
 
@@ -182,6 +182,14 @@ Decisions approved 2026-10-14:
 Model:
 - `public.gestao_cadastros_report_summary(...)` (jsonb) and `public.gestao_cadastros_report_requests(...)` (paged rows, ≤ 1000 per call, optional field values) — `SECURITY INVOKER` (RLS applies) and staff-only, sharing `private.gestao_cadastros_report_base(...)`.
 - Indexes: `(opened_at desc)` and `(service_id, opened_at desc)` (replaces `(service_id)`). Text search in the queue uses `ilike` without trigram indexes: installing `pg_trgm` in the shared project is out of scope; revisit if volume grows.
+
+## Hardening and release (Phase 8)
+
+Decisions approved 2026-10-15:
+- **E2E sign-in**: Microsoft SSO is never automated. A person signs in once in a Playwright browser (`pnpm e2e:login`, `pnpm e2e:login:requester`); the session is saved in `e2e/.auth/` (git-ignored) and reused. No local/password test users.
+- **E2E data**: the staff flow writes real requests marked company "TESTE E2E" / code "E2E". All test requests are removed **before release** with `supabase/maintenance/prelaunch_cleanup.sql` (one-time, approval required; mode `e2e` or `all`). It is the only sanctioned path that bypasses the history guards and must never run after launch.
+- **Security headers** (next.config): `frame-ancestors 'none'`/`X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`; `X-Powered-By` removed. A full script CSP (nonces) is deferred.
+- Deployment checklist: `docs/deployment.md`.
 
 ## Open items
 

@@ -10,8 +10,10 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build"
+    "test:e2e": "playwright test --project=anonymous --project=staff --project=requester",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
+    "e2e:login": "playwright test --project=login --headed",
+    "e2e:login:requester": "playwright test --project=login-requester --headed"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
