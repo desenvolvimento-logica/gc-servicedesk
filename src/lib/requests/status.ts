@@ -24,6 +24,7 @@ export const REQUEST_EVENT_TYPES = [
   "assigned",
   "unassigned",
   "internal_note_added",
+  "comment_added",
   "request_closed",
   "attachment_added",
 ] as const;
@@ -36,6 +37,7 @@ export const requestEventLabels: Record<RequestEventType, string> = {
   assigned: "Responsável atribuído",
   unassigned: "Responsável removido",
   internal_note_added: "Observação interna",
+  comment_added: "Observação",
   request_closed: "Solicitação concluída",
   attachment_added: "Anexo adicionado",
 };

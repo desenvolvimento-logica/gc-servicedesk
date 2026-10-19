@@ -29,7 +29,7 @@ Code and technical identifiers: English.
 - Request detail.
 - Search/filter controls.
 - Assignment and status actions.
-- Internal notes.
+- Observações (comments between requester and staff).
 - Reports/indicators.
 
 ## Administrator screens

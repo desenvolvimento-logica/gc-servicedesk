@@ -6,7 +6,7 @@ import { STAFF_STATE } from "../playwright.config";
 
 /**
  * Critical path with a staff session (operator or administrator):
- * open → assign → start → internal note → close → correction → queue →
+ * open → assign → start → comment → close → correction → queue →
  * reports/CSV. Everything it creates is marked "TESTE E2E" so it can be
  * removed before launch (supabase/maintenance/prelaunch_cleanup.sql).
  *
@@ -85,9 +85,9 @@ test("operator workflow: assign, start, note and close", async ({ page }) => {
   await page.getByRole("button", { name: "Iniciar atendimento" }).click();
   await expect(page.getByText("Aberta → Em andamento")).toBeVisible();
 
-  await page.getByLabel("Nova observação").fill(`${MARK}: observação interna`);
-  await page.getByRole("button", { name: "Adicionar observação" }).click();
-  await expect(page.getByText("Observação adicionada.")).toBeVisible();
+  await page.getByLabel("Nova observação").fill(`${MARK}: observação`);
+  await page.getByRole("button", { name: "Enviar observação" }).click();
+  await expect(page.getByText("Observação enviada.")).toBeVisible();
 
   await page.getByRole("button", { name: "Concluir solicitação" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Concluir" }).click();

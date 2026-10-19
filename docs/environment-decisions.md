@@ -119,6 +119,7 @@ All three exist in `public.users`.
 | `20261015150000_gestao_cadastros_companies` | 2026-10-15, verified |
 | `20261019120000_gestao_cadastros_company_accounting` | 2026-10-19, verified |
 | `20261019150000_gestao_cadastros_other_departments` | 2026-10-19, verified |
+| `20261019170000_gestao_cadastros_request_comments` | 2026-10-19, verified |
 
 Note: the Supabase SQL Editor may not keep one session across statements, so migrations must not rely on temporary tables (`on commit drop`); seed data goes in a single statement with CTEs.
 
@@ -158,6 +159,7 @@ Decisions approved 2026-10-14:
 - **Closing** requires no assignment and no comment (for now). It records `completed_at`, `closed_by` and `closed_by_name`.
 - **Visibility**: status changes, assignment and closing are requester-visible history events; internal notes (`internal_note_added`) are staff-only.
 - Closed requests accept no assignment, status change or new internal note.
+- Since 2026-10-19 the app no longer writes internal notes: see "Observações" below.
 
 Model:
 - `gestao_cadastros_requests` gained `assigned_to_name` (snapshot; `public.users` names are not readable by every role), `closed_by` (`ON DELETE RESTRICT`) and `closed_by_name`.
@@ -222,6 +224,13 @@ Decisions approved 2026-10-19:
 - Helper `private.gestao_cadastros_in_catch_all(dpto_id)`; `is_requester`, `can_open_requests`, `my_profile`, `admin_departments`, `admin_users` and `create_request` were replaced with the same signatures to resolve the catch-all name.
 - Service **"Outros"** in Fiscal, Departamento Pessoal, Contábil and Demais Departamentos (sort order 800, before the correction service): Nome/Código da empresa (optional), Descrição da solicitação (required), Observações. No correction service in Demais Departamentos.
 - Department ids in the app may be negative (catch-all); 0 is rejected.
+
+## Observações (request comments)
+
+Decisions approved 2026-10-19:
+- Staff-only internal notes are not used. The request page shows **Observações** to the requester and the staff: event `comment_added`, always `requester`-visible, written only through `public.gestao_cadastros_add_comment(request_id, text)` — staff on any request, requesters on their own (any other request answers "not found"); 1–5000 characters; not on closed requests.
+- Existing `internal_note_added` events keep their staff-only visibility (shown to staff marked "Interna"). `add_internal_note` stays in the database but is no longer called.
+- The enum value cannot be dropped: the rollback only removes the RPC (and refuses if comments exist).
 
 ## Open items
 

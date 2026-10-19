@@ -14,7 +14,7 @@ export const nextStatuses = (status: RequestStatus): readonly RequestStatus[] =>
 
 export const canTransition = (from: RequestStatus, to: RequestStatus) => transitions[from].includes(to);
 
-/** Closed requests accept no further changes (assignment, status or notes). */
+/** Closed requests accept no further changes (assignment, status or comments). */
 export const isLocked = (status: RequestStatus) => status === "closed";
 
 export const NOTE_MAX_LENGTH = 5000;

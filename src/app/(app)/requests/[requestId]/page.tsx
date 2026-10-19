@@ -6,8 +6,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { InternalNotes } from "@/components/requests/internal-notes";
 import { RequestActions } from "@/components/requests/request-actions";
+import { RequestComments } from "@/components/requests/request-comments";
 import { RequestStatusBadge } from "@/components/requests/request-status-badge";
 import { RequestTimeline } from "@/components/requests/request-timeline";
 import { Badge } from "@/components/ui/badge";
@@ -85,6 +85,23 @@ async function RequestContent({ params }: RequestPageProps) {
                 </div>
               ))}
             </dl>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+              <MessageSquareText aria-hidden className="size-5" />
+              Observações
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RequestComments
+              requestId={request.id}
+              comments={request.events.filter(
+                (event) => event.eventType === "comment_added" || event.eventType === "internal_note_added",
+              )}
+              locked={isLocked(request.status)}
+            />
           </CardContent>
         </Card>
       </div>
@@ -179,22 +196,6 @@ async function StaffPanels({ viewer, request }: { viewer: Viewer; request: Reque
               viewerUserId={viewer.userId}
             />
           )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <MessageSquareText aria-hidden className="size-5" />
-            Observações internas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <InternalNotes
-            requestId={request.id}
-            notes={request.events.filter((event) => event.eventType === "internal_note_added").toReversed()}
-            locked={locked}
-          />
         </CardContent>
       </Card>
     </>

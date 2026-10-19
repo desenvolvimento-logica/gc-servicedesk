@@ -11,6 +11,8 @@ export function RequestTimeline({ events }: { events: readonly RequestEvent[] })
       {events.map((event) => {
         const description = describeEvent(event);
         const internal = event.visibility === "internal";
+        // Free text: shown in full in "Observações".
+        const clamp = internal || event.eventType === "comment_added";
         return (
           <li key={event.id} className="relative">
             <span
@@ -22,7 +24,7 @@ export function RequestTimeline({ events }: { events: readonly RequestEvent[] })
               {internal ? <Badge variant="outline">Interna</Badge> : null}
             </p>
             {description ? (
-              <p className={cn("text-sm text-muted-foreground", internal && "line-clamp-2 break-words")}>{description}</p>
+              <p className={cn("text-sm text-muted-foreground", clamp && "line-clamp-2 break-words")}>{description}</p>
             ) : null}
             <p className="text-xs text-muted-foreground">
               {formatDateTime(event.createdAt)}

@@ -46,7 +46,7 @@ function parseDetail(details: string | null | undefined): Record<string, string>
   }
 }
 
-/** Message for a failed staff workflow RPC (assign, status change, note). */
+/** Message for a failed workflow RPC (assign, status change, comment). */
 export function workflowErrorMessage(error: Pick<RpcError, "code">): string {
   switch (error.code) {
     case "42501":

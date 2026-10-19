@@ -6,15 +6,15 @@ import { z } from "zod";
 import type { ActionResult } from "@/lib/catalog/types";
 import { REQUEST_STATUSES } from "@/lib/requests/status";
 import { NOTE_MAX_LENGTH } from "@/lib/requests/workflow";
-import { getStaff } from "@/server/auth/session";
+import { getSession, getStaff } from "@/server/auth/session";
 import { FORBIDDEN_MESSAGE } from "@/server/catalog/errors";
 import { createSupabaseServerClient } from "@/server/supabase/server-client";
 
 import { workflowErrorMessage } from "./errors";
 
 /**
- * Staff actions on a request. Each one re-checks the staff role and
- * validates its arguments; the database RPCs check the role again, lock the
+ * Workflow actions on a request. Each one re-checks the role and validates
+ * its arguments; the database RPCs check the role again, lock the
  * request, enforce the transitions and append the history event.
  */
 
@@ -64,7 +64,15 @@ export async function changeRequestStatus(requestId: unknown, status: unknown): 
   );
 }
 
-export async function addInternalNote(requestId: unknown, text: unknown): Promise<ActionResult> {
+/**
+ * "Observações": a comment visible to the requester and the staff. Not a
+ * staff-only action: the RPC allows staff on any request and requesters on
+ * their own (others get "not found").
+ */
+export async function addComment(requestId: unknown, text: unknown): Promise<ActionResult> {
+  const session = await getSession();
+  if (session.status !== "authorized") return { ok: false, message: FORBIDDEN_MESSAGE };
+
   const id = requestIdSchema.safeParse(requestId);
   if (!id.success) return INVALID_INPUT;
   const note = noteSchema.safeParse(text);
@@ -73,7 +81,8 @@ export async function addInternalNote(requestId: unknown, text: unknown): Promis
     return { ok: false, message: messages[0] ?? INVALID_MESSAGE, fieldErrors: { text: messages } };
   }
 
-  return runStaffRpc((supabase) =>
-    supabase.rpc("gestao_cadastros_add_internal_note", { p_request_id: id.data, p_text: note.data }),
-  );
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc("gestao_cadastros_add_comment", { p_request_id: id.data, p_text: note.data });
+  refresh();
+  return error ? { ok: false, message: workflowErrorMessage(error) } : { ok: true, data: undefined };
 }

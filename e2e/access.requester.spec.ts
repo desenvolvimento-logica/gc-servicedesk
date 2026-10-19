@@ -7,7 +7,7 @@ import { REQUESTER_STATE } from "../playwright.config";
 /**
  * Requester session (member of a requester department, no GC role). Read-only:
  * checks that staff areas stay closed. Data privacy (own requests only,
- * internal notes hidden) is verified in the database checks.
+ * legacy internal notes hidden, comments) is verified in the database checks.
  */
 
 test.skip(!existsSync(REQUESTER_STATE), "Sem sessão de solicitante: rode `pnpm e2e:login:requester` antes.");

@@ -29,8 +29,11 @@ Suggested event types:
 ## Visibility
 History entries must support visibility or event classification so internal operator notes are never returned to requesters.
 
-## Internal notes
-Gestão de Cadastro operators can add internal observations. Internal notes are not requester-visible, identify author and timestamp, should not be silently edited/deleted through normal flows and should be included in authorized operational audit views.
+## Observações (comments) — since 2026-10-19
+The team does not use staff-only notes. The request page has "Observações": comments visible to the requester and the staff, written by staff on any open request and by the requester on their own open requests (`comment_added`, requester-visible). They identify author and timestamp, are append-only and appear in the history. Closed requests accept no new comments.
+
+## Internal notes (legacy)
+Notes written before 2026-10-19 (`internal_note_added`) keep their staff-only visibility: they are never returned to requesters and are shown to staff marked "Interna". The app no longer creates them.
 
 ## Immutability
 Do not update old audit events to represent new state. Append a new event.

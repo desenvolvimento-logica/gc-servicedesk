@@ -53,7 +53,7 @@ export type RequestEventDetails = {
   toStatus?: RequestStatus;
   previousAssigneeName?: string;
   assigneeName?: string;
-  /** Internal note text (staff only). */
+  /** Comment text, or a legacy internal note (staff only). */
   text?: string;
 };
 

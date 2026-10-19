@@ -77,6 +77,7 @@ export function describeEvent(event: Pick<RequestEvent, "eventType" | "details">
     case "unassigned":
       return details.previousAssigneeName ? `${details.previousAssigneeName} deixou de ser o responsável.` : null;
     case "internal_note_added":
+    case "comment_added":
       return details.text ?? null;
     case "attachment_added":
       return null;

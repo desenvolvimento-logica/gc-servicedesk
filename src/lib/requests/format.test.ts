@@ -88,5 +88,6 @@ describe("describeEvent", () => {
       "Ana deixou de ser o responsável.",
     );
     expect(describeEvent({ eventType: "internal_note_added", details: { text: "Nota" } })).toBe("Nota");
+    expect(describeEvent({ eventType: "comment_added", details: { text: "Pode enviar o arquivo?" } })).toBe("Pode enviar o arquivo?");
   });
 });
