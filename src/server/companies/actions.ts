@@ -26,12 +26,18 @@ export async function searchCompanies(term: unknown): Promise<ActionResult<Compa
   }
 }
 
-/** "Sincronizar agora" (administrators). Runs on the server with the secret key. */
-export async function syncCompaniesNow(): Promise<ActionResult<{ upserted: number }>> {
+/**
+ * "Sincronizar agora" / "Sincronização completa" (administrators). Runs on
+ * the server with the secret key.
+ */
+export async function syncCompaniesNow(full: unknown = false): Promise<ActionResult<{ upserted: number }>> {
   const admin = await getAdministrator();
   if (!admin) return { ok: false, message: FORBIDDEN_MESSAGE };
 
-  const result = await runCompanySync("manual", { id: admin.userId, name: admin.name });
+  const parsed = z.boolean().safeParse(full);
+  if (!parsed.success) return { ok: false, message: "Opção de sincronização inválida." };
+
+  const result = await runCompanySync("manual", { id: admin.userId, name: admin.name }, { full: parsed.data });
   refresh();
 
   switch (result.status) {

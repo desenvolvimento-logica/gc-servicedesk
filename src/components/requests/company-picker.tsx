@@ -79,7 +79,8 @@ export function CompanyPicker({ onSelect, disabled }: CompanyPickerProps) {
         />
       </div>
       <p id={`${id}-hint`} className="text-xs text-muted-foreground">
-        Ao escolher, &ldquo;Nome da empresa&rdquo; e &ldquo;Código da empresa&rdquo; são preenchidos automaticamente.
+        Ao escolher, os dados da empresa (nome, código e, quando houver, tributação e contabilidade) são preenchidos
+        automaticamente.
       </p>
 
       <div id={`${id}-results`} aria-live="polite" aria-busy={pending}>
@@ -97,6 +98,8 @@ export function CompanyPicker({ onSelect, disabled }: CompanyPickerProps) {
                     Código {company.id} · {formatDocument(company.document) || "sem documento"}
                     {company.tradeName ? ` · ${company.tradeName}` : null}
                     {company.uf ? ` · ${company.uf}` : null}
+                    {company.taxRegime ? ` · ${company.taxRegime}` : null}
+                    {company.accounting ? ` · Contabilidade: ${company.accounting}` : null}
                   </span>
                 </button>
               </li>

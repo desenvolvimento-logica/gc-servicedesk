@@ -66,6 +66,21 @@ describe("syncCompanies", () => {
     expect(state.runs[0]).toMatchObject({ trigger: "manual", actorName: "Admin" });
   });
 
+  it("ignores the cursor on a full sync", async () => {
+    const seen: (string | null)[] = [];
+    const { store, state } = fakeStore("2026-10-03 09:00:00");
+    const result = await syncCompanies({
+      client: pagedClient([[company(1, "2026-09-01 10:00:00")]], seen),
+      store,
+      trigger: "manual",
+      actor: { id: 1, name: "Admin" },
+      full: true,
+    });
+    expect(result).toMatchObject({ status: "success", mode: "full", upserted: 1 });
+    expect(seen).toEqual([null, null]);
+    expect(state.runs[0]).toMatchObject({ mode: "full" });
+  });
+
   it("keeps the previous cursor when the API fails", async () => {
     const { store, state } = fakeStore("2026-10-01 00:00:00");
     const client: AcessoriasClient = {

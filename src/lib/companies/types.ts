@@ -1,4 +1,4 @@
-import { digitsOnly, normalizeSearch } from "./normalize";
+import { digitsOnly, normalizeSearch, type Accounting } from "./normalize";
 
 /** A company offered by the picker / listed to administrators. */
 export type Company = {
@@ -8,6 +8,9 @@ export type Company = {
   tradeName: string | null;
   active: boolean;
   uf: string | null;
+  /** Tributação derived from the Acessórias Regime. */
+  taxRegime: string | null;
+  accounting: Accounting | null;
 };
 
 export type CompanySyncRun = {

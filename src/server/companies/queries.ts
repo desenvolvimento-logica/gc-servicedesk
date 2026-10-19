@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
+import { ACCOUNTING_VALUES } from "@/lib/companies/normalize";
 import { companySearchTerm, type Company, type CompanySyncRun } from "@/lib/companies/types";
 import { requireAdministrator } from "@/server/auth/session";
 import { createSupabaseServerClient } from "@/server/supabase/server-client";
@@ -15,9 +16,11 @@ const companyRowSchema = z.object({
   trade_name: z.string().nullable(),
   active: z.boolean(),
   uf: z.string().nullable(),
+  tax_regime: z.string().nullable(),
+  accounting: z.enum(ACCOUNTING_VALUES).nullable(),
 });
 
-const COMPANY_COLUMNS = "acessorias_id, document, legal_name, trade_name, active, uf";
+const COMPANY_COLUMNS = "acessorias_id, document, legal_name, trade_name, active, uf, tax_regime, accounting";
 
 const toCompany = (row: z.infer<typeof companyRowSchema>): Company => ({
   id: row.acessorias_id,
@@ -26,6 +29,8 @@ const toCompany = (row: z.infer<typeof companyRowSchema>): Company => ({
   tradeName: row.trade_name,
   active: row.active,
   uf: row.uf,
+  taxRegime: row.tax_regime,
+  accounting: row.accounting,
 });
 
 /** Active companies matching the term (name, trade name, CNPJ/CPF or Acessórias ID). */

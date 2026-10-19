@@ -38,7 +38,8 @@ export default function AdminCompaniesPage({ searchParams }: CompaniesPageProps)
                 Sincronização com o Acessórias
               </CardTitle>
               <CardDescription>
-                As empresas são copiadas do Acessórias todos os dias às 6h; use o botão para atualizar na hora. O
+                As empresas são copiadas do Acessórias todos os dias às 6h; use &ldquo;Sincronizar agora&rdquo; para buscar as alterações na hora, ou
+                &ldquo;Sincronização completa&rdquo; para buscar todas as empresas novamente. O
                 &ldquo;Código da empresa&rdquo; nas solicitações é o ID da empresa no Acessórias.
               </CardDescription>
             </div>
@@ -135,6 +136,8 @@ async function CompaniesList({ searchParams }: CompaniesPageProps) {
             <TableHead>Empresa</TableHead>
             <TableHead>CNPJ/CPF</TableHead>
             <TableHead>UF</TableHead>
+            <TableHead>Tributação</TableHead>
+            <TableHead>Contabilidade</TableHead>
             <TableHead>Situação</TableHead>
           </TableRow>
         </TableHeader>
@@ -148,6 +151,8 @@ async function CompaniesList({ searchParams }: CompaniesPageProps) {
               </TableCell>
               <TableCell className="tabular-nums">{formatDocument(company.document)}</TableCell>
               <TableCell>{company.uf ?? "—"}</TableCell>
+              <TableCell>{company.taxRegime ?? "—"}</TableCell>
+              <TableCell>{company.accounting ?? "—"}</TableCell>
               <TableCell>
                 <StatusBadge label={company.active ? "Ativa" : "Inativa"} tone={company.active ? "success" : "neutral"} />
               </TableCell>
@@ -155,7 +160,7 @@ async function CompaniesList({ searchParams }: CompaniesPageProps) {
           ))}
           {page.items.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                 {page.total === 0 ? "Nenhuma empresa sincronizada ainda." : "Nenhuma empresa encontrada."}
               </TableCell>
             </TableRow>

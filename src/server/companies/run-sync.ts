@@ -74,7 +74,11 @@ export type RunSyncResult = SyncResult | { status: "not-configured"; message: st
  * Runs the Acessórias company sync on the server. Callers must already have
  * authorized the request (Vercel Cron secret or an administrator session).
  */
-export async function runCompanySync(trigger: SyncTrigger, actor: { id: number; name: string } | null): Promise<RunSyncResult> {
+export async function runCompanySync(
+  trigger: SyncTrigger,
+  actor: { id: number; name: string } | null,
+  options: { full?: boolean } = {},
+): Promise<RunSyncResult> {
   const env = getSyncEnv();
   if (!env) {
     return {
@@ -88,5 +92,6 @@ export async function runCompanySync(trigger: SyncTrigger, actor: { id: number; 
     store: supabaseStore(env.SUPABASE_SECRET_KEY),
     trigger,
     actor,
+    full: options.full,
   });
 }

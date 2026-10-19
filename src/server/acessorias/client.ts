@@ -4,7 +4,8 @@ import { acessoriasCompanySchema, type AcessoriasCompany } from "@/lib/companies
 
 /**
  * Minimal Acessórias API client (https://api.acessorias.com/documentation).
- * GET /companies/ListAll returns 20 companies per page ("Pagina"); an empty
+ * GET /companies/ListAll returns 20 companies per page ("Pagina"); the
+ * `registrationData` flag adds the "Regime" field. An empty
  * list ends the listing. Limit: 100 requests/minute (HTTP 429 above it).
  * Business errors may come as HTTP 200 with an "Erro" key.
  */
@@ -52,9 +53,10 @@ export function createAcessoriasClient(token: string, deps: AcessoriasDeps = def
 
   /** One page of companies; `since` (DtLastDH) limits to companies changed after it. */
   async function listCompanies(page: number, since: string | null): Promise<AcessoriasCompany[]> {
-    const url = new URL("/companies/ListAll", ACESSORIAS_BASE_URL);
-    url.searchParams.set("Pagina", String(page));
-    if (since) url.searchParams.set("DtLastDH", since);
+    const params = new URLSearchParams({ Pagina: String(page) });
+    if (since) params.set("DtLastDH", since);
+    // Presence flag (no value): adds "Regime" (tax regime + accounting type).
+    const url = new URL(`/companies/ListAll?registrationData&${params.toString()}`, ACESSORIAS_BASE_URL);
 
     for (let attempt = 0; ; attempt++) {
       await throttle();

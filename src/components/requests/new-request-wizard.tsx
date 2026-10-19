@@ -18,6 +18,7 @@ import {
   type RequestPayload,
 } from "@/lib/requests/form-schema";
 import type { Company } from "@/lib/companies/types";
+import { companyFieldValues } from "@/lib/requests/company-prefill";
 import { COMPANY_CODE_FIELD, COMPANY_NAME_FIELD, companyPrefill, ORIGINAL_REQUEST_FIELD } from "@/lib/requests/corrections";
 import { formatPendingValue } from "@/lib/requests/format";
 import type { CorrectableRequest, CreatedRequest, RequestableDepartment, RequestableService } from "@/lib/requests/types";
@@ -185,8 +186,9 @@ function RequestForm({ service, initialOriginal, step, onStepChange, onCreated }
 
   const selectCompany = (company: Company) => {
     const options = { shouldValidate: form.formState.isSubmitted, shouldDirty: true };
-    form.setValue(COMPANY_NAME_FIELD, company.legalName, options);
-    form.setValue(COMPANY_CODE_FIELD, String(company.id), options);
+    for (const [key, value] of Object.entries(companyFieldValues(service.fields, company))) {
+      form.setValue(key, value, options);
+    }
   };
 
   const submitReview = form.handleSubmit((payload) => {

@@ -2,7 +2,7 @@
 
 Hosting: Vercel. Database/Auth: the existing unified office Supabase project (`olyvjnqmrzkziirzbmhi`), which **is production** (see `environment-decisions.md`). No secrets belong in this file.
 
-## 1. Database (already applied, in this order)
+## 1. Database (applied in this order)
 
 | # | Migration | Verification |
 |---|---|---|
@@ -14,6 +14,7 @@ Hosting: Vercel. Database/Auth: the existing unified office Supabase project (`o
 | 6 | `20261015090000_gestao_cadastros_reports` | idem |
 | 7 | `20261015120000_gestao_cadastros_user_admin` | idem |
 | 8 | `20261015150000_gestao_cadastros_companies` | idem |
+| 9 | `20261019120000_gestao_cadastros_company_accounting` | idem — after deploying, run **Sincronização completa** once (Administração → Empresas) |
 
 Migrations are applied by hand in the Supabase SQL Editor after review (never `supabase db push`: the project is shared with other apps). Each has a rollback in `supabase/rollbacks/`. Full audit: `supabase/verification/phase8_security_audit.check.sql`.
 

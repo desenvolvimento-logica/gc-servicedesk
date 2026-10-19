@@ -30,6 +30,8 @@ export type CompanyRow = {
   active: boolean;
   uf: string | null;
   tax_regime: string | null;
+  acessorias_regime: string | null;
+  accounting: Accounting | null;
   search_text: string;
   acessorias_updated_at: string | null;
   synced_at: string;
@@ -66,11 +68,52 @@ export function toCompanyRow(company: AcessoriasCompany, syncedAt: string): Comp
     trade_name: tradeName,
     active: isActiveStatus(company.Status),
     uf: emptyToNull(company.UF)?.toUpperCase() ?? null,
-    tax_regime: emptyToNull(company.Regime),
+    ...regimeColumns(company.Regime),
     search_text: normalizeSearch([legalName, tradeName ?? "", document, String(company.ID)].join(" ")),
     acessorias_updated_at: emptyToNull(company.DtLastDH),
     synced_at: syncedAt,
   };
+}
+
+export const ACCOUNTING_VALUES = ["Bancária", "Fiscal", "Não"] as const;
+export type Accounting = (typeof ACCOUNTING_VALUES)[number];
+
+/**
+ * Tax regime prefixes of the Acessórias "Regime" (compared accent-free and
+ * uppercase), most specific first. Unmatched values keep the whole Regime.
+ */
+const TAX_REGIME_PREFIXES: [RegExp, string][] = [
+  [/^SEM MOVIMENTO SIMPLES/, "Sem movimento - Simples Nacional"],
+  [/^SEM MOVIMENTO LUCRO/, "Sem movimento - Lucro Presumido/Real"],
+  [/^SIMPLES E RPA\b/, "Simples Nacional e RPA"],
+  [/^SIMPLES NACIONAL\b/, "Simples Nacional"],
+  [/^LUCRO PRESUMIDO\b/, "Lucro Presumido"],
+  [/^LUCRO REAL\b/, "Lucro Real"],
+  [/^HOLDING LP\b/, "Holding LP"],
+  [/^HOLDING LR\b/, "Holding LR"],
+  [/^RET\b/, "RET"],
+  [/^SEM FINS LUCRATIVOS/, "Sem fins lucrativos"],
+  [/^DOMESTICA\b/, "Doméstica"],
+];
+
+/**
+ * Splits the Acessórias "Regime" (e.g. "LUCRO REAL C INSCRIÇÃO - COM
+ * FUNCIONÁRIOS - C BANCÁRIA") into the tax regime and the accounting type
+ * the office encodes in its suffix (C BANCÁRIA / CONT FISCAL / C FISCAL).
+ */
+export function parseRegime(regime: string | undefined): { taxRegime: string | null; accounting: Accounting | null } {
+  const raw = emptyToNull(regime)?.replace(/\s+/g, " ") ?? null;
+  if (!raw) return { taxRegime: null, accounting: null };
+
+  const key = normalizeSearch(raw).toUpperCase();
+  const taxRegime = TAX_REGIME_PREFIXES.find(([pattern]) => pattern.test(key))?.[1] ?? raw;
+  const accounting: Accounting = /\bC(ONT)? FISCAL\b/.test(key) ? "Fiscal" : /\bC BANCARIA\b/.test(key) ? "Bancária" : "Não";
+  return { taxRegime, accounting };
+}
+
+function regimeColumns(regime: string | undefined): Pick<CompanyRow, "tax_regime" | "acessorias_regime" | "accounting"> {
+  const { taxRegime, accounting } = parseRegime(regime);
+  return { tax_regime: taxRegime, acessorias_regime: emptyToNull(regime), accounting };
 }
 
 /** Latest of two DtLastDH values ("YYYY-MM-DD HH:MM:SS" or ISO: both sort as text). */

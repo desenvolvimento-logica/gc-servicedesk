@@ -6,6 +6,8 @@ import { AcessoriasError, type AcessoriasClient } from "../acessorias/client";
  * Copies Acessórias companies into gestao_cadastros_companies.
  * - First run (no successful run with a cursor): full listing.
  * - Next runs: only companies changed since the last cursor (DtLastDH).
+ * - `full`: ignores the cursor and lists everything again (e.g. after new
+ *   columns are added to the local copy).
  * Stops before the function time limit; an unfinished run is an error and
  * the next one starts again from the last successful cursor.
  */
@@ -30,6 +32,7 @@ export type SyncOptions = {
   store: SyncStore;
   trigger: SyncTrigger;
   actor?: { id: number; name: string } | null;
+  full?: boolean;
   /** Milliseconds available before giving up (function limit minus margin). */
   timeBudgetMs?: number;
   now?: () => number;
@@ -53,7 +56,7 @@ export async function syncCompanies(options: SyncOptions): Promise<SyncResult> {
     return { status: "skipped", message: "Já existe uma sincronização em andamento." };
   }
 
-  const since = await store.lastSuccessfulCursor();
+  const since = options.full ? null : await store.lastSuccessfulCursor();
   const mode: SyncMode = since ? "incremental" : "full";
   const runId = await store.startRun({
     trigger,

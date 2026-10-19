@@ -33,7 +33,7 @@ describe("Acessórias client", () => {
     const d = deps([json([company])]);
     const result = await createAcessoriasClient("tok", d).listCompanies(2, "2026-10-01 00:00:00");
     expect(result).toHaveLength(1);
-    expect(d.calls[0]).toBe("https://api.acessorias.com/companies/ListAll?Pagina=2&DtLastDH=2026-10-01+00%3A00%3A00 Bearer tok");
+    expect(d.calls[0]).toBe("https://api.acessorias.com/companies/ListAll?registrationData&Pagina=2&DtLastDH=2026-10-01+00%3A00%3A00 Bearer tok");
   });
 
   it("paces consecutive requests", async () => {
