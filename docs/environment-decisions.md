@@ -120,6 +120,7 @@ All three exist in `public.users`.
 | `20261019120000_gestao_cadastros_company_accounting` | 2026-10-19, verified |
 | `20261019150000_gestao_cadastros_other_departments` | 2026-10-19, verified |
 | `20261019170000_gestao_cadastros_request_comments` | 2026-10-19, verified |
+| `20261019190000_gestao_cadastros_senha_gerente_onvio` | 2026-10-19, verified |
 
 Note: the Supabase SQL Editor may not keep one session across statements, so migrations must not rely on temporary tables (`on commit drop`); seed data goes in a single statement with CTEs.
 
