@@ -27,6 +27,7 @@ Manages users, departments, services and service fields.
 - Fiscal
 - Contábil
 - DP
+- Demais Departamentos — GC-only catch-all for members of every other corporate department (service "Outros" only; added 2026-10-19)
 
 Departments are data, not hard-coded application logic.
 

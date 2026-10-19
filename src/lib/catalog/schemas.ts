@@ -40,7 +40,8 @@ const sortOrder = z
   .max(9999, "Use um valor entre 0 e 9999.");
 
 export const idSchema = z.uuid();
-export const dptoIdSchema = z.number().int().positive();
+/** Corporate departments are positive; the GC catch-all ("Demais Departamentos") is negative. */
+export const dptoIdSchema = z.number().int().refine((id) => id !== 0);
 
 export const serviceFormSchema = z.object({
   name: requiredText(120),

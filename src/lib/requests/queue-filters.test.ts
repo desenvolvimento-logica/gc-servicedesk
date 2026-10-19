@@ -31,6 +31,11 @@ describe("parseQueueFilters", () => {
     });
   });
 
+  it("accepts the catch-all department (negative id) but not zero", () => {
+    expect(parseQueueFilters({ department: "-1" }).department).toBe(-1);
+    expect(parseQueueFilters({ department: "0" }).department).toBeNull();
+  });
+
   it("parses valid values and drops invalid ones", () => {
     const filters = parseQueueFilters({
       q: "Empresa",

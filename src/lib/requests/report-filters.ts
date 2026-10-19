@@ -35,7 +35,8 @@ type RawParams = Record<string, string | string[] | undefined>;
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value) ?? "";
 
 const isoDate = z.iso.date();
-const positiveInt = z.coerce.number().int().positive();
+/** Negative for the GC catch-all department ("Demais Departamentos"). */
+const departmentId = z.coerce.number().int().refine((id) => id !== 0);
 
 const toUtcDate = (date: string) => new Date(`${date}T00:00:00Z`);
 
@@ -50,7 +51,7 @@ export const daysBetween = (from: string, to: string) =>
 
 export function parseReportFilters(params: RawParams, today = todaySaoPaulo()): ReportFilters {
   const common = {
-    department: positiveInt.safeParse(first(params.department)).data ?? null,
+    department: departmentId.safeParse(first(params.department)).data ?? null,
     service: z.uuid().safeParse(first(params.service)).data ?? null,
     kind: z.enum(SERVICE_KINDS).safeParse(first(params.kind)).data ?? null,
   };

@@ -118,6 +118,7 @@ All three exist in `public.users`.
 | `20261015120000_gestao_cadastros_user_admin` | 2026-10-15, verified |
 | `20261015150000_gestao_cadastros_companies` | 2026-10-15, verified |
 | `20261019120000_gestao_cadastros_company_accounting` | 2026-10-19, verified |
+| `20261019150000_gestao_cadastros_other_departments` | 2026-10-19, verified |
 
 Note: the Supabase SQL Editor may not keep one session across statements, so migrations must not rely on temporary tables (`on commit drop`); seed data goes in a single statement with CTEs.
 
@@ -212,6 +213,15 @@ Decisions approved 2026-10-15:
 - New server-only variables: `SUPABASE_SECRET_KEY`, `ACESSORIAS_API_TOKEN`, `CRON_SECRET` (never `NEXT_PUBLIC_*`).
 - Tax regime and accounting (approved 2026-10-19): the sync sends the `registrationData` flag, which adds the company's `Regime` (without it the field is not returned). The API has no accounting field; the office encodes it in the Regime suffix, e.g. `LUCRO REAL C INSCRIÇÃO - COM FUNCIONÁRIOS - C BANCÁRIA`. Stored: `acessorias_regime` (as returned), `tax_regime` (only the regime — Simples Nacional, Lucro Presumido, Lucro Real, Holding LP/LR, RET, Doméstica, Sem movimento…; the whole Regime when it does not match a known prefix) and `accounting` (`Bancária` for C BANCÁRIA, `Fiscal` for CONT FISCAL/C FISCAL, `Não` otherwise, null without Regime). Rules in `parseRegime` (`src/lib/companies/normalize.ts`). Picking a company also fills the `tributacao` and `contabilidade` fields when the service has them (editable). **Sincronização completa** (administrators) ignores the cursor and lists every company again — needed once after this change, since incremental runs only bring changed companies.
 - Accepted 2026-10-15: daily sync on the Hobby plan is enough (manual sync covers same-day needs); Vercel functions stay in `iad1` (US). Note: Vercel Hobby terms restrict use to non-commercial projects.
+
+## Demais Departamentos and "Outros"
+
+Decisions approved 2026-10-19:
+- **Demais Departamentos** is a GC-only requester department: a `gestao_cadastros_requester_departments` row with `catch_all = true`, its own `name` and `dpto_id = -1`. Nothing is added to the shared `public.dpto`. Corporate rows keep positive ids and their `ON DELETE CASCADE` foreign key to `public.dpto`, now through the generated column `corporate_dpto_id` (NULL for the catch-all).
+- Access: members of a corporate department that is **not registered** as a requester department (active or inactive) may open requests in it; users without a department get no access; Fiscal/DP/Contábil members do not see it. Deactivating it (Administração → Departamentos) removes that access. Requesters still see only their own requests, and these users can also search the synchronized client companies in the picker.
+- Helper `private.gestao_cadastros_in_catch_all(dpto_id)`; `is_requester`, `can_open_requests`, `my_profile`, `admin_departments`, `admin_users` and `create_request` were replaced with the same signatures to resolve the catch-all name.
+- Service **"Outros"** in Fiscal, Departamento Pessoal, Contábil and Demais Departamentos (sort order 800, before the correction service): Nome/Código da empresa (optional), Descrição da solicitação (required), Observações. No correction service in Demais Departamentos.
+- Department ids in the app may be negative (catch-all); 0 is rejected.
 
 ## Open items
 

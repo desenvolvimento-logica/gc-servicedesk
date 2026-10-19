@@ -52,6 +52,8 @@ const first = (value: string | string[] | undefined) => (Array.isArray(value) ? 
 
 const isoDate = z.iso.date();
 const positiveInt = z.coerce.number().int().positive();
+/** Negative for the GC catch-all department ("Demais Departamentos"). */
+const departmentId = z.coerce.number().int().refine((id) => id !== 0);
 const statusFilter = z.enum([...REQUEST_STATUSES, ACTIVE, ALL]);
 
 export function parseQueueFilters(params: RawParams): QueueFilters {
@@ -63,7 +65,7 @@ export function parseQueueFilters(params: RawParams): QueueFilters {
     q: sanitizeSearch(first(params.q)),
     status: statusFilter.safeParse(first(params.status)).data ?? ACTIVE,
     kind: z.enum(SERVICE_KINDS).safeParse(first(params.kind)).data ?? null,
-    department: positiveInt.safeParse(first(params.department)).data ?? null,
+    department: departmentId.safeParse(first(params.department)).data ?? null,
     service: z.uuid().safeParse(first(params.service)).data ?? null,
     assignee: assignee === UNASSIGNED ? UNASSIGNED : (positiveInt.safeParse(assignee).data ?? null),
     from: from.success ? from.data : null,

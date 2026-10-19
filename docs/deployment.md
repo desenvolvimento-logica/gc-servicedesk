@@ -15,6 +15,7 @@ Hosting: Vercel. Database/Auth: the existing unified office Supabase project (`o
 | 7 | `20261015120000_gestao_cadastros_user_admin` | idem |
 | 8 | `20261015150000_gestao_cadastros_companies` | idem |
 | 9 | `20261019120000_gestao_cadastros_company_accounting` | idem — after deploying, run **Sincronização completa** once (Administração → Empresas) |
+| 10 | `20261019150000_gestao_cadastros_other_departments` | idem |
 
 Migrations are applied by hand in the Supabase SQL Editor after review (never `supabase db push`: the project is shared with other apps). Each has a rollback in `supabase/rollbacks/`. Full audit: `supabase/verification/phase8_security_audit.check.sql`.
 

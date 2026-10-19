@@ -38,6 +38,11 @@ describe("parseReportFilters", () => {
       parseReportFilters({ department: "7", kind: "correction", service: "00000000-0000-4000-8000-000000000000" }, today),
     ).toMatchObject({ department: 7, kind: "correction", service: "00000000-0000-4000-8000-000000000000" });
   });
+
+  it("accepts the catch-all department (negative id) but not zero", () => {
+    expect(parseReportFilters({ department: "-1" }, today).department).toBe(-1);
+    expect(parseReportFilters({ department: "0" }, today).department).toBeNull();
+  });
 });
 
 describe("reportFiltersToSearch", () => {
